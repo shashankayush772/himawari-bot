@@ -25,8 +25,10 @@ services:
       - key: BOT_PREFIX
         value: "!"
       - key: LAVALINK_HOST
-        value: "localhost:2333"
+        value: "lavalink.jirayu.net:443"
       - key: LAVALINK_PASSWORD
         value: "youshallnotpass"
       - key: LAVALINK_NAME
-        value: "Main"
+        value: "Jirayu-Primary"
+      - key: LAVALINK_SECURE
+        value: "true"

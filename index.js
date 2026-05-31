@@ -21,21 +21,45 @@ const client = new Client({
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-const lavalinkNodes = [{
-    name: process.env.LAVALINK_NAME || 'Main',
-    url: process.env.LAVALINK_HOST || 'localhost:2333',
-    auth: process.env.LAVALINK_PASSWORD || 'youshallnotpass',
-}];
+// Use external free Lavalink nodes (no need to self-host Java)
+const lavalinkNodes = [];
+
+// Primary: env-configured node (can be external or local)
+if (process.env.LAVALINK_HOST) {
+    lavalinkNodes.push({
+        name: process.env.LAVALINK_NAME || 'Primary',
+        url: process.env.LAVALINK_HOST,
+        auth: process.env.LAVALINK_PASSWORD || 'youshallnotpass',
+        secure: process.env.LAVALINK_SECURE === 'true',
+    });
+}
+
+// Fallback free public nodes
+const fallbackNodes = [
+    { name: 'Jirayu',     url: 'lavalink.jirayu.net:443',       auth: 'youshallnotpass', secure: true },
+    { name: 'KasawaPro',  url: 'lava.kasawa.pro:2333',          auth: 'youshallnotpass', secure: false },
+];
+
+for (const fb of fallbackNodes) {
+    if (!lavalinkNodes.some(n => n.url === fb.url)) {
+        lavalinkNodes.push(fb);
+    }
+}
+
+console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
 
 client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
     moveOnDisconnect: false,
-    reconnectTries: 10,
-    reconnectInterval: 3000,
+    reconnectTries: 15,
+    reconnectInterval: 5000,
 });
 
 client.shoukaku.on('ready', (name) => console.log(`  🎵 Lavalink node "${name}" connected`));
 client.shoukaku.on('error', (name, error) => console.error(`  ❌ Lavalink "${name}" error:`, error.message));
 client.shoukaku.on('close', (name, code, reason) => console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`));
+client.shoukaku.on('disconnect', (name, players, moved) => {
+    console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players affected: ${players.size}. Moved: ${moved}`);
+});
 
 client.queue = new QueueManager(client);
 
