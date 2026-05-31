@@ -1,0 +1,10 @@
+node_modules
+.env
+json.sqlite
+cmd_error.log
+.local
+.git
+.gitignore
+*.log
+lavalink/lavalink_output.log
+lavalink/lavalink_error.log
