@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: himawari-bot
+    runtime: docker
+    repo: https://github.com/shashankayush772/himawari-bot
+    branch: master
+    plan: starter
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false  # Will prompt user to enter manually (secret!)
+      - key: CLIENT_ID
+        value: "1487517426261164082"
+      - key: GUILD_ID
+        value: "946304359631818812"
+      - key: BUG_REPORT_CHANNEL_ID
+        value: "1488527840927420486"
+      - key: SUGGESTION_CHANNEL_ID
+        value: "1488527840927420486"
+      - key: LOG_CHANNEL_ID
+        value: "1488527748917100675"
+      - key: DM_LOG_CHANNEL_ID
+        value: "1488527711617155212"
+      - key: BOT_PREFIX
+        value: "!"
+      - key: LAVALINK_HOST
+        value: "localhost:2333"
+      - key: LAVALINK_PASSWORD
+        value: "youshallnotpass"
+      - key: LAVALINK_NAME
+        value: "Main"
