@@ -25,7 +25,7 @@ const port = process.env.PORT || 10000;
 http.createServer((req, res) => {
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.end(JSON.stringify({ status: 'ok', bot: 'himawari', uptime: process.uptime() }));
-}).listen(port, () => console.log('  ✅ Health-check listening on port ' + port));
+}).listen(port, '0.0.0.0', () => console.log('  ✅ Health-check listening on port ' + port));
 " &
 
 # ── Step 3: Start the bot ──

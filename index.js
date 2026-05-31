@@ -252,12 +252,13 @@ client.once(Events.ClientReady, (c) => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 });
 
-// ── Crash Prevention ───────────────────────────────────────
-process.on('unhandledRejection', (err) => {
-    console.error('  ⚠️ Unhandled Rejection:', err.message || err);
+// ── Global Error Handling ────────────────────────────────
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('  ⚠️  [Unhandled Rejection]', promise, 'reason:', reason);
 });
 process.on('uncaughtException', (err) => {
-    console.error('  ⚠️ Uncaught Exception:', err.message || err);
+    console.error('  ⚠️  [Uncaught Exception]', err);
 });
 
+// Start the Bot
 client.login(process.env.DISCORD_TOKEN);
