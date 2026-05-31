@@ -1,28 +1,18 @@
-const Discord = require('discord.js'); 
-const { MessageEmbed } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-    name: 'purge',
-    aliases: ["cl", "delete"], 
-    description: "Clear messages",
-    async execute(bot, message, args){
+    data: new SlashCommandBuilder()
+        .setName('purge')
+        .setDescription('🧹 Bulk delete messages from the channel')
+        .addIntegerOption(opt =>
+            opt.setName('amount').setDescription('Number of messages to delete (1-100)').setRequired(true).setMinValue(1).setMaxValue(100)
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
-        if(!args[0]) return message.reply("Please enter the amount of messages that you want to clear!");
-        if(isNaN(args[0])) return message.reply("Please enter a real number!");
+    async execute(interaction) {
+        const amount = interaction.options.getInteger('amount');
 
-        if(args[0] > 100) return message.reply("You can't delete more than 100 messages!");
-        if(args[0] < 1) return message.reply("You must delete atleast one message!");
-
-        await message.channel.messages.fetch({ limit: args[0] }).then((messages) => {
-            message.channel.bulkDelete(messages);
-
-            const Embed = new Discord.MessageEmbed()
-     .setColor("RANDOM")
-     .setDescription(`Successfully deleted ***${args.join(" ")}*** messages by the order of ***${message.author.tag}*** !`)
-     .setTimestamp()
-
-     return message.channel.send(Embed);
-
-        });
+        const deleted = await interaction.channel.bulkDelete(amount, true);
+        await interaction.reply({ content: `🧹 Deleted **${deleted.size}** messages.`, ephemeral: true });
     },
 };

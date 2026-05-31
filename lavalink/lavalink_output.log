@@ -1,0 +1,222 @@
+2026-03-30T23:04:54.120+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : Starting Launcher v4.2.2 using Java 21.0.10 with PID 2884 (C:\Users\shash\Downloads\Ayush-1\Ayush-1\lavalink\Lavalink.jar started by shash in C:\Users\shash\Downloads\Ayush-1\Ayush-1\lavalink)
+2026-03-30T23:04:54.130+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : No active profile set, falling back to 1 default profile: "default"
+2026-03-30T23:04:54.926+05:30  INFO 2884 --- [Lavalink] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=3d6bf653-92ea-3fde-943a-10b9f8cd696e
+2026-03-30T23:04:55.405+05:30  INFO 2884 --- [Lavalink] [           main] l.server.bootstrap.PluginManager         : Found plugin 'youtube-plugin' version '1.18.0'
+2026-03-30T23:04:57.435+05:30  INFO 2884 --- [Lavalink] [           main] l.server.bootstrap.PluginManager         : Loaded 'youtube-plugin-1.18.0.jar' (17 classes)
+2026-03-30T23:04:57.756+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : Started Launcher in 4.276 seconds (process running for 4.996)
+2026-03-30T23:04:57.846+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : 
+
+[32m       .  [31m _                  _ _       _    [32m__ _ _
+[32m      /\\ [31m| | __ ___   ____ _| (_)_ __ | | __[32m\ \ \ \
+[32m     ( ( )[31m| |/ _` \ \ / / _` | | | '_ \| |/ /[32m \ \ \ \
+[32m      \\/ [31m| | (_| |\ V / (_| | | | | | |   < [32m  ) ) ) )
+[32m       '  [31m|_|\__,_| \_/ \__,_|_|_|_| |_|_|\_\[32m / / / /
+[0m    =========================================[32m/_/_/_/[0m
+
+	Version:        4.2.2
+	Build time:     06.03.2026 23:24:16 UTC
+	Branch          HEAD
+	Commit:         e8503fd
+	Commit time:    06.03.2026 23:21:15 UTC
+	JVM:            21.0.10
+	Lavaplayer      2.2.6
+
+2026-03-30T23:04:57.860+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : No active profile set, falling back to 1 default profile: "default"
+2026-03-30T23:04:58.585+05:30  WARN 2884 --- [Lavalink] [           main] io.undertow.websockets.jsr               : UT026010: Buffer pool was not set on WebSocketDeploymentInfo, the default pool will be used
+2026-03-30T23:04:58.609+05:30  INFO 2884 --- [Lavalink] [           main] io.undertow.servlet                      : Initializing Spring embedded WebApplicationContext
+2026-03-30T23:04:58.610+05:30  INFO 2884 --- [Lavalink] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 743 ms
+2026-03-30T23:04:59.900+05:30  INFO 2884 --- [Lavalink] [           main] c.s.d.l.tools.GarbageCollectionMonitor   : GC monitoring enabled, reporting results every 2 minutes.
+2026-03-30T23:05:00.269+05:30 DEBUG 2884 --- [Lavalink] [           main] d.l.youtube.plugin.ClientProvider        : Initialising client MUSIC with options ClientOptions{playback=true, playlistLoading=true, videoLoading=true, searching=true}
+2026-03-30T23:05:00.270+05:30 DEBUG 2884 --- [Lavalink] [           main] d.l.youtube.plugin.ClientProvider        : Initialising client TVHTML5_SIMPLY with options ClientOptions{playback=true, playlistLoading=true, videoLoading=true, searching=true}
+2026-03-30T23:05:00.271+05:30 DEBUG 2884 --- [Lavalink] [           main] d.l.youtube.plugin.ClientProvider        : Initialising client ANDROID_VR with options ClientOptions{playback=true, playlistLoading=true, videoLoading=true, searching=true}
+2026-03-30T23:05:00.272+05:30 DEBUG 2884 --- [Lavalink] [           main] d.l.youtube.plugin.ClientProvider        : Initialising client WEB with options ClientOptions{playback=true, playlistLoading=true, videoLoading=true, searching=true}
+2026-03-30T23:05:00.291+05:30 DEBUG 2884 --- [Lavalink] [           main] d.l.youtube.plugin.YoutubePluginLoader   : No ratelimit config found, skipping setup of route planner
+2026-03-30T23:05:00.293+05:30  INFO 2884 --- [Lavalink] [           main] d.l.youtube.plugin.YoutubePluginLoader   : YouTube source initialised with clients: WEB_REMIX, TVHTML5_SIMPLY, ANDROID_VR, WEB 
+2026-03-30T23:05:00.300+05:30  WARN 2884 --- [Lavalink] [           main] l.server.config.SentryConfiguration      : Turning off sentry
+2026-03-30T23:05:00.547+05:30  INFO 2884 --- [Lavalink] [           main] l.server.config.KoeConfiguration         : OS: WINDOWS, Arch: X86_64
+2026-03-30T23:05:00.549+05:30  INFO 2884 --- [Lavalink] [           main] l.server.config.KoeConfiguration         : Enabling JDA-NAS
+2026-03-30T23:05:00.552+05:30  INFO 2884 --- [Lavalink] [           main] c.s.l.c.natives.NativeLibraryLoader      : Native library udpqueue: loading with filter null
+2026-03-30T23:05:00.570+05:30  INFO 2884 --- [Lavalink] [           main] c.s.l.c.natives.NativeLibraryLoader      : Native library udpqueue: successfully loaded.
+2026-03-30T23:05:00.866+05:30  INFO 2884 --- [Lavalink] [           main] io.undertow                              : starting server: Undertow - 2.3.13.Final
+2026-03-30T23:05:00.885+05:30  INFO 2884 --- [Lavalink] [           main] org.xnio                                 : XNIO version 3.8.8.Final
+2026-03-30T23:05:00.904+05:30  INFO 2884 --- [Lavalink] [           main] org.xnio.nio                             : XNIO NIO Implementation Version 3.8.8.Final
+2026-03-30T23:05:01.065+05:30  INFO 2884 --- [Lavalink] [           main] org.jboss.threads                        : JBoss Threads version 3.5.0.Final
+2026-03-30T23:05:01.149+05:30  INFO 2884 --- [Lavalink] [           main] o.s.b.w.e.undertow.UndertowWebServer     : Undertow started on port 2333 (http) with context path '/'
+2026-03-30T23:05:01.161+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : Started Launcher in 3.398 seconds (process running for 8.401)
+2026-03-30T23:05:01.162+05:30  INFO 2884 --- [Lavalink] [           main] lavalink.server.Launcher                 : Lavalink is ready to accept connections.
+2026-03-30T23:05:36.113+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] io.undertow.servlet                      : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-30T23:05:36.114+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-03-30T23:05:36.115+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-03-30T23:05:36.140+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.HandshakeInterceptorImpl     : Incoming connection from /[0:0:0:0:0:0:0:1]:8717
+2026-03-30T23:05:36.158+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/websocket
+2026-03-30T23:05:36.198+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] c.s.l.c.natives.NativeLibraryLoader      : Native library dave-jvm: loading with filter null
+2026-03-30T23:05:36.983+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] c.s.l.c.natives.NativeLibraryLoader      : Native library dave-jvm: successfully loaded.
+2026-03-30T23:05:37.010+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] lavalink.server.io.SocketServer          : Connection successfully established from shoukaku/4.3.0 (https://github.com/shipgirlproject/Shoukaku.git)
+2026-03-30T23:08:18.125+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:chale aao pasmere thoda aur"
+2026-03-30T23:08:18.128+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-2] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:chale aao pasmere thoda aur with client "WEB_REMIX"
+2026-03-30T23:08:24.637+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: chale aao pasmere thoda aur
+2026-03-30T23:08:24.706+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Achale+aao+pasmere+thoda+aur
+2026-03-30T23:12:28.139+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:thoda aur"
+2026-03-30T23:12:28.141+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-2] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:thoda aur with client "WEB_REMIX"
+2026-03-30T23:12:28.583+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: thoda aur
+2026-03-30T23:12:28.589+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Athoda+aur
+2026-03-30T23:20:02.419+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 I/O-10] lavalink.server.io.SocketServer          : Connection closed from /[0:0:0:0:0:0:0:1]:8717 with id asia91an50rpcals -- CloseStatus[code=1006, reason=]
+2026-03-30T23:20:02.420+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 I/O-10] lavalink.server.io.SocketContext         : Shutting down 0 playing players.
+2026-03-30T23:23:51.835+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.HandshakeInterceptorImpl     : Incoming connection from /[0:0:0:0:0:0:0:1]:11476
+2026-03-30T23:23:51.839+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/websocket
+2026-03-30T23:23:51.840+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] lavalink.server.io.SocketServer          : Connection successfully established from shoukaku/4.3.0 (https://github.com/shipgirlproject/Shoukaku.git)
+2026-03-30T23:26:11.324+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:Gand me danda de"
+2026-03-30T23:26:11.327+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-2] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:Gand me danda de with client "WEB_REMIX"
+2026-03-30T23:26:11.858+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: Gand me danda de
+2026-03-30T23:26:11.862+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3AGand+me+danda+de
+2026-03-30T23:26:13.608+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"voice":{"token":"6d7a1d4540af0ed9","endpoint":"c-bom12-97c7c7f7.discord.media:2096","sessionId":"bf0177f0b9a39b155132360de19b4841","channelId":"1488229076681359440"}}
+2026-03-30T23:26:13.616+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"volume":100}
+2026-03-30T23:26:13.625+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"track":{"encoded":"QAAA9QMAEEdhYW5kIE1laW4gRGFuZGEACkJvZGhpIFRyZWUAAAAAAASIKAALaFhlS0xZTjhrSGcAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1oWGVLTFlOOGtIZwEAfWh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9GU2V2aEkySjZTcW5ENmRZUjVQUkVyUGFmZWJEWTFtanJFVlc3U0xJYm1idzRDM0tydEt4U0NjbmY0ZFgybE55OEIyYVRQUWpPcEhURnNNPXcxMDAwLWgxMDAwAAAHeW91dHViZQAAAAAAAAAA"}}
+2026-03-30T23:26:14.054+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.c.LocalSignatureCipherManager      : Timestamp from script /s/player/ace4b2f8/player_embed.vflset/en_GB/base.js
+2026-03-30T23:26:14.270+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.clients.skeleton.NonMusicClient    : Requesting https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false (player api response) with payload {"contentCheckOk":true,"attestationRequest":{"omitBotguardData":true},"playbackContext":{"contentPlaybackContext":{"encryptedHostFlags":"AD5ZzFQIyQSKTEEVrbw250lumowY0JJ_ulhQO8d_wtEm2QqbTCb35vrwJ88T-d1mSGCQWbT5i_u-2ok4uyI3GAckRtL2vA","signatureTimestamp":"20541"}},"context":{"thirdParty":{"embedUrl":"https://google.com"},"client":{"clientName":"TVHTML5_SIMPLY","clientScreen":"EMBED","clientVersion":"1.0"}},"racyCheckOk":true,"videoId":"hXeKLYN8kHg","params":"2AMB"}
+2026-03-30T23:26:14.435+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.clients.skeleton.NonMusicClient    : Requesting https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false (player api response) with payload {"context":{"thirdParty":{"embedUrl":"https://google.com"},"client":{"androidSdkVersion":32,"clientName":"ANDROID_VR","clientScreen":"EMBED","clientVersion":"1.60.19"}},"racyCheckOk":true,"contentCheckOk":true,"videoId":"hXeKLYN8kHg"}
+2026-03-30T23:26:14.485+05:30  INFO 2884 --- [Lavalink] [back-1-thread-1] d.l.y.http.YoutubeAccessTokenTracker     : Updating YouTube visitor id succeeded, new one is CgtSTkhYMHBOTDNxQSi_8qrOBjIKCgJJThIEGgAgUzoMCAEgmM_HhvenruVp, next update will be after 600 seconds.
+2026-03-30T23:26:14.604+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.youtube.track.YoutubeAudioTrack      : Starting track with URL from client ANDROID_VR: https://rr4---sn-ci5gup-cag6.googlevideo.com/videoplayback?expire=1774914975&ei=P7nKaampDsPc3LUPkoH-2A8&ip=49.200.103.222&id=o-AM6giDgvgILQDL4Ba9SglrHKZZLiaMUaTCaih2GlQZlh&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=384&met=1774893375%2C&mh=iu&mm=31%2C29&mn=sn-ci5gup-cag6%2Csn-h5576nsz&ms=au%2Crdu&mv=m&mvi=4&pl=22&rms=au%2Cau&gcr=in&initcwndbps=396250&bui=AUUZDGLMAwmf9lUv5ZDry5U2sPTl2UJC7IaCMOk9BnUs03h5CSt0ZhQn_NKGHcKwBzbva5oF2Z_Fnq-n&spc=jlWavdKsPjJ7-AHu3Z-2rSlZ5lQpLrymC3nu7rs9usm3wQ&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=5203646&dur=296.221&lmt=1759631239596412&mt=1774892971&fvip=3&keepalive=yes&fexp=51565116%2C51565681&c=ANDROID_VR&txp=1432534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgcqa2Er3BhRuu4DXZLxwN2uQ6JhbU6URtEGaGcFN7E_8CICvnFGOP1jXE9CBo0CV28GOyJARO-htEmmT9qO18sZgx&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgW-we-8fmrWL3TFqgSFiA-huIqKwLXHkYObn4OyZ1cS8CICvxhSOVAZGw8O-0XkGlAnbwEyaNK5ho80EKy2Wm1W7-
+2026-03-30T23:26:14.607+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.track.YoutubePersistentHttpStream  : Range URL: https://rr4---sn-ci5gup-cag6.googlevideo.com/videoplayback?expire=1774914975&ei=P7nKaampDsPc3LUPkoH-2A8&ip=49.200.103.222&id=o-AM6giDgvgILQDL4Ba9SglrHKZZLiaMUaTCaih2GlQZlh&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=384&met=1774893375%2C&mh=iu&mm=31%2C29&mn=sn-ci5gup-cag6%2Csn-h5576nsz&ms=au%2Crdu&mv=m&mvi=4&pl=22&rms=au%2Cau&gcr=in&initcwndbps=396250&bui=AUUZDGLMAwmf9lUv5ZDry5U2sPTl2UJC7IaCMOk9BnUs03h5CSt0ZhQn_NKGHcKwBzbva5oF2Z_Fnq-n&spc=jlWavdKsPjJ7-AHu3Z-2rSlZ5lQpLrymC3nu7rs9usm3wQ&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=5203646&dur=296.221&lmt=1759631239596412&mt=1774892971&fvip=3&keepalive=yes&fexp=51565116%2C51565681&c=ANDROID_VR&txp=1432534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgcqa2Er3BhRuu4DXZLxwN2uQ6JhbU6URtEGaGcFN7E_8CICvnFGOP1jXE9CBo0CV28GOyJARO-htEmmT9qO18sZgx&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRAIgW-we-8fmrWL3TFqgSFiA-huIqKwLXHkYObn4OyZ1cS8CICvxhSOVAZGw8O-0XkGlAnbwEyaNK5ho80EKy2Wm1W7-&range=0-5203646
+2026-03-30T23:27:49.730+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"track":{"encoded":null},"position":0}
+2026-03-30T23:28:22.812+05:30 ERROR 2884 --- [Lavalink] [ntLoopGroup-2-1] lavalink.server.io.SocketContext         : Koe encountered a voice gateway exception for guild 1406867906842853376
+
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434) ~[na:na]
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1935) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:161) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+
+2026-03-30T23:28:22.817+05:30  WARN 2884 --- [Lavalink] [ntLoopGroup-2-1] m.k.k.i.g.AbstractMediaGatewayConnection : Exception occurred in WebSocket client handler (Guild ID=1406867906842853376)
+
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434) ~[na:na]
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1935) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:161) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+
+2026-03-30T23:28:55.882+05:30 ERROR 2884 --- [Lavalink] [ntLoopGroup-2-2] lavalink.server.io.SocketContext         : Koe encountered a voice gateway exception for guild 1406867906842853376
+
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434) ~[na:na]
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1935) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:161) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+
+2026-03-30T23:28:55.885+05:30  WARN 2884 --- [Lavalink] [ntLoopGroup-2-2] m.k.k.i.g.AbstractMediaGatewayConnection : Exception occurred in WebSocket client handler (Guild ID=1406867906842853376)
+
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401) ~[na:na]
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434) ~[na:na]
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1935) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139) ~[netty-buffer-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:161) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:388) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:596) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:571) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:512) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:484) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:225) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:196) ~[netty-transport-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1195) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[netty-common-4.2.10.Final.jar!/:4.2.10.Final]
+	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
+
+2026-03-30T23:31:57.526+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:thoda aur"
+2026-03-30T23:31:57.529+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-2] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:thoda aur with client "WEB_REMIX"
+2026-03-30T23:31:59.978+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: thoda aur
+2026-03-30T23:31:59.981+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Athoda+aur
+2026-03-30T23:32:01.334+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : DELETE /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376
+2026-03-30T23:32:11.225+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:thoda aur"
+2026-03-30T23:32:11.226+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-2] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:thoda aur with client "WEB_REMIX"
+2026-03-30T23:32:11.675+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: thoda aur
+2026-03-30T23:32:11.677+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Athoda+aur
+2026-03-30T23:33:03.582+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:for a reason"
+2026-03-30T23:33:03.583+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-2] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:for a reason with client "WEB_REMIX"
+2026-03-30T23:33:03.971+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: for a reason
+2026-03-30T23:33:03.976+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Afor+a+reason
+2026-03-30T23:33:05.828+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"voice":{"token":"53b7cfa5c8ede2e4","endpoint":"c-bom12-97c7c7f7.discord.media:2096","sessionId":"bf0177f0b9a39b155132360de19b4841","channelId":"1488229076681359440"}}
+2026-03-30T23:33:05.835+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"volume":100}
+2026-03-30T23:33:05.836+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"track":{"encoded":"QAAA9QMADEZvciBBIFJlYXNvbgALS2FyYW4gQXVqbGEAAAAAAAK/IAALY1dJR1VQUXFuU2sAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj1jV0lHVVBRcW5TawEAgGh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9Cek9CRVJWd3hISWtWRHBlUFZOOG1uVDBNSUQzY3lTU0hjWnZZODRGSHVzQkw3OGR4a2RwV0JCazhvNE81ZThCYWVuTmxIS2xJOWZXYl9SY2N3PXcxMDAwLWgxMDAwAAAHeW91dHViZQAAAAAAAAAA"}}
+2026-03-30T23:33:06.142+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.clients.skeleton.NonMusicClient    : Requesting https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false (player api response) with payload {"contentCheckOk":true,"attestationRequest":{"omitBotguardData":true},"playbackContext":{"contentPlaybackContext":{"encryptedHostFlags":"AD5ZzFRKPSxKyIJzJPfJFJRRDsl9YIEEhXN5hKyeZMg7WZEZCouVVPkn6hcnPtqxexHmnbIgOVgw3xZ1H8b1fZN-Q5eR9w","signatureTimestamp":"20541"}},"context":{"thirdParty":{"embedUrl":"https://google.com"},"client":{"clientName":"TVHTML5_SIMPLY","clientScreen":"EMBED","clientVersion":"1.0"}},"racyCheckOk":true,"videoId":"cWIGUPQqnSk","params":"2AMB"}
+2026-03-30T23:33:06.324+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.clients.skeleton.NonMusicClient    : Requesting https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false (player api response) with payload {"context":{"thirdParty":{"embedUrl":"https://google.com"},"client":{"androidSdkVersion":32,"clientName":"ANDROID_VR","clientScreen":"EMBED","clientVersion":"1.60.19"}},"racyCheckOk":true,"contentCheckOk":true,"videoId":"cWIGUPQqnSk"}
+2026-03-30T23:33:06.325+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.http.YoutubeAccessTokenTracker     : YouTube visitor id was recently updated, not updating again right away.
+2026-03-30T23:33:06.439+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.youtube.track.YoutubeAudioTrack      : Starting track with URL from client ANDROID_VR: https://rr3---sn-ci5gup-cagy.googlevideo.com/videoplayback?expire=1774915387&ei=27rKafzNBLS4z7sPjPfIOQ&ip=49.200.103.222&id=o-ANCXIfmv40FiCKelt5mW5tCxyqoDCvsQh5OLjIz70rr2&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=981&met=1774893787%2C&mh=Ow&mm=31%2C29&mn=sn-ci5gup-cagy%2Csn-h5576nsk&ms=au%2Crdu&mv=m&mvi=3&pl=22&rms=au%2Cau&gcr=in&initcwndbps=1265000&bui=AUUZDGK5yNfjv6nrA2QvT07PlzDxeJBgVbfl_wOvjQa3PLHAzXDuB9rBJVJcTv6HmlsONHlA134r2Tm5&spc=jlWavWUuY9IFxFzHQ2py6-BOFWe2UUWzG6DrlcwRwgwGRw&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=3018662&dur=180.021&lmt=1772280509920712&mt=1774893208&fvip=1&keepalive=yes&fexp=51565116%2C51565681&c=ANDROID_VR&txp=5532534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgWOA15iypgFGcDolvGieQqOXWmwBDByEoYBsA5VPSINECIDQSx5A65GU9R9wtVIrdkMEqW9VDf2pwO9c04E96CnKx&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRgIhAIGOL8_dROaNiWUa08jYbopVsTxauF0F3yeHodXiSqxmAiEAws7Bf1OhB3NBxj4Eeamax5e6PlGZwIeMtMNb-mlCPm8%3D
+2026-03-30T23:33:06.440+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.track.YoutubePersistentHttpStream  : Range URL: https://rr3---sn-ci5gup-cagy.googlevideo.com/videoplayback?expire=1774915387&ei=27rKafzNBLS4z7sPjPfIOQ&ip=49.200.103.222&id=o-ANCXIfmv40FiCKelt5mW5tCxyqoDCvsQh5OLjIz70rr2&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=981&met=1774893787%2C&mh=Ow&mm=31%2C29&mn=sn-ci5gup-cagy%2Csn-h5576nsk&ms=au%2Crdu&mv=m&mvi=3&pl=22&rms=au%2Cau&gcr=in&initcwndbps=1265000&bui=AUUZDGK5yNfjv6nrA2QvT07PlzDxeJBgVbfl_wOvjQa3PLHAzXDuB9rBJVJcTv6HmlsONHlA134r2Tm5&spc=jlWavWUuY9IFxFzHQ2py6-BOFWe2UUWzG6DrlcwRwgwGRw&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=3018662&dur=180.021&lmt=1772280509920712&mt=1774893208&fvip=1&keepalive=yes&fexp=51565116%2C51565681&c=ANDROID_VR&txp=5532534&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgWOA15iypgFGcDolvGieQqOXWmwBDByEoYBsA5VPSINECIDQSx5A65GU9R9wtVIrdkMEqW9VDf2pwO9c04E96CnKx&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRgIhAIGOL8_dROaNiWUa08jYbopVsTxauF0F3yeHodXiSqxmAiEAws7Bf1OhB3NBxj4Eeamax5e6PlGZwIeMtMNb-mlCPm8%3D&range=0-3018662
+2026-03-30T23:41:07.050+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : DELETE /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376
+2026-03-30T23:41:32.784+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:khela hobe"
+2026-03-30T23:41:32.786+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-3] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:khela hobe with client "WEB_REMIX"
+2026-03-30T23:41:33.230+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: khela hobe
+2026-03-30T23:41:33.231+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Akhela+hobe
+2026-03-30T23:41:34.021+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"voice":{"token":"f81bd274276993c5","endpoint":"c-bom12-97c7c7f7.discord.media:2096","sessionId":"bf0177f0b9a39b155132360de19b4841","channelId":"1488229076681359440"}}
+2026-03-30T23:41:34.028+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-2] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"volume":100}
+2026-03-30T23:41:34.029+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : PATCH /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376?noReplace=false, payload={"track":{"encoded":"QAABDgMAKUtoZWxhIEhvYmUgKGZlYXQuIERlYmFuZ3NodSBCaGF0dGFjaGFyeWEpAAlESiBCdWxidWwAAAAAAAM8IAALOVlEWGNlV1dCd2MAAQAraHR0cHM6Ly93d3cueW91dHViZS5jb20vd2F0Y2g/dj05WURYY2VXV0J3YwEAfmh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9wVnlzbm1qZ3pNMXMwRTZmeDZGOHB6cktqUUxqamZIMlNxOEtZVVg4YW84WTBPNzM5Z3VsSVBteGtCWUMzLUEtNktKQnVaMGdoaldqUk42Tz13MTAwMC1oMTAwMAAAB3lvdXR1YmUAAAAAAAAAAA=="}}
+2026-03-30T23:41:34.256+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.clients.skeleton.NonMusicClient    : Requesting https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false (player api response) with payload {"contentCheckOk":true,"attestationRequest":{"omitBotguardData":true},"playbackContext":{"contentPlaybackContext":{"encryptedHostFlags":"AD5ZzFS7tOSvNuM9kRNjGJln6IWPMs9TJscbEXgi-Q4eGWlK7bhpXSxDX4nLho40JPxq-96EaznRPj2pVDNVcTQdPCRwgw","signatureTimestamp":"20541"}},"context":{"thirdParty":{"embedUrl":"https://google.com"},"client":{"clientName":"TVHTML5_SIMPLY","clientScreen":"EMBED","clientVersion":"1.0"}},"racyCheckOk":true,"videoId":"9YDXceWWBwc","params":"2AMB"}
+2026-03-30T23:41:34.426+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.clients.skeleton.NonMusicClient    : Requesting https://youtubei.googleapis.com/youtubei/v1/player?prettyPrint=false (player api response) with payload {"context":{"thirdParty":{"embedUrl":"https://google.com"},"client":{"androidSdkVersion":32,"clientName":"ANDROID_VR","clientScreen":"EMBED","clientVersion":"1.60.19"}},"racyCheckOk":true,"contentCheckOk":true,"videoId":"9YDXceWWBwc"}
+2026-03-30T23:41:34.526+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.youtube.track.YoutubeAudioTrack      : Starting track with URL from client ANDROID_VR: https://rr2---sn-ci5gup-cagr.googlevideo.com/videoplayback?expire=1774915895&ei=17zKaZapCpLS3LUPu7iFyAU&ip=49.200.103.222&id=o-AAe39Ao5uN6gE2lnJ59AIEoJWwVlU4saP1CQW6UQUeMr&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=339&met=1774894295%2C&mh=MO&mm=31%2C29&mn=sn-ci5gup-cagr%2Csn-ajh555-54&ms=au%2Crdu&mv=m&mvi=2&pcm2cms=yes&pl=22&rms=au%2Cau&gcr=in&initcwndbps=2043750&bui=AUUZDGKPzO55KxkYHaFIvoEpUO77nNpZmp_t_sHqYTI8w9udItCmm9-pkBOCZI1LamnRs790tTanI5pR&spc=jlWavRJJtkWorqaPojK_tLxAVB_ywtQT_YE6IDTI8urUrw&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=3314237&dur=211.081&lmt=1773528051951149&mt=1774893931&fvip=5&keepalive=yes&fexp=51565116%2C51565681&c=ANDROID_VR&txp=2318224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgFPTVkCBRy5PQJ0g9JFSxZAiFJL9T8Zy-i4qKW32PhIUCIC8xzBnrNHmJ9FHojV3nIGi7qmzxQL2s71msy3BtehFY&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRgIhAJKvF6bl5ehiEqUdyIRApubqutNaN4s288eIw2r_L6zQAiEAu04Wl6LP7UdK03em8fBctthf7dF_2zN8Tq7h7F60WU8%3D
+2026-03-30T23:41:34.527+05:30 DEBUG 2884 --- [Lavalink] [back-1-thread-1] d.l.y.track.YoutubePersistentHttpStream  : Range URL: https://rr2---sn-ci5gup-cagr.googlevideo.com/videoplayback?expire=1774915895&ei=17zKaZapCpLS3LUPu7iFyAU&ip=49.200.103.222&id=o-AAe39Ao5uN6gE2lnJ59AIEoJWwVlU4saP1CQW6UQUeMr&itag=251&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ%3D%3D&cps=339&met=1774894295%2C&mh=MO&mm=31%2C29&mn=sn-ci5gup-cagr%2Csn-ajh555-54&ms=au%2Crdu&mv=m&mvi=2&pcm2cms=yes&pl=22&rms=au%2Cau&gcr=in&initcwndbps=2043750&bui=AUUZDGKPzO55KxkYHaFIvoEpUO77nNpZmp_t_sHqYTI8w9udItCmm9-pkBOCZI1LamnRs790tTanI5pR&spc=jlWavRJJtkWorqaPojK_tLxAVB_ywtQT_YE6IDTI8urUrw&vprv=1&svpuc=1&mime=audio%2Fwebm&rqh=1&gir=yes&clen=3314237&dur=211.081&lmt=1773528051951149&mt=1774893931&fvip=5&keepalive=yes&fexp=51565116%2C51565681&c=ANDROID_VR&txp=2318224&sparams=expire%2Cei%2Cip%2Cid%2Citag%2Csource%2Crequiressl%2Cxpc%2Cgcr%2Cbui%2Cspc%2Cvprv%2Csvpuc%2Cmime%2Crqh%2Cgir%2Cclen%2Cdur%2Clmt&sig=AHEqNM4wRAIgFPTVkCBRy5PQJ0g9JFSxZAiFJL9T8Zy-i4qKW32PhIUCIC8xzBnrNHmJ9FHojV3nIGi7qmzxQL2s71msy3BtehFY&lsparams=cps%2Cmet%2Cmh%2Cmm%2Cmn%2Cms%2Cmv%2Cmvi%2Cpcm2cms%2Cpl%2Crms%2Cinitcwndbps&lsig=APaTxxMwRgIhAJKvF6bl5ehiEqUdyIRApubqutNaN4s288eIw2r_L6zQAiEAu04Wl6LP7UdK03em8fBctthf7dF_2zN8Tq7h7F60WU8%3D&range=0-3314237
+2026-03-30T23:42:12.624+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:boyfriend karan aujla"
+2026-03-30T23:42:12.626+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-3] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:boyfriend karan aujla with client "WEB_REMIX"
+2026-03-30T23:42:12.984+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: boyfriend karan aujla
+2026-03-30T23:42:12.988+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Aboyfriend+karan+aujla
+2026-03-30T23:42:13.771+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : DELETE /v4/sessions/l1pvbqc51g9zcsnb/players/1406867906842853376
+2026-03-30T23:42:30.824+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:boyfriend"
+2026-03-30T23:42:30.826+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-3] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:boyfriend with client "WEB_REMIX"
+2026-03-30T23:42:31.311+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: boyfriend
+2026-03-30T23:42:31.314+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Aboyfriend
+2026-03-30T23:44:05.619+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Got request to load for identifier "ytmsearch:twist"
+2026-03-30T23:44:05.621+05:30 DEBUG 2884 --- [Lavalink] [  XNIO-1 task-3] d.l.youtube.YoutubeAudioSourceManager    : Attempting to load ytmsearch:twist with client "WEB_REMIX"
+2026-03-30T23:44:05.956+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.player.AudioLoaderRestHandler   : Loaded playlist Search music results for: twist
+2026-03-30T23:44:05.958+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : GET /v4/loadtracks?identifier=ytmsearch%3Atwist
+2026-03-30T23:45:23.818+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.HandshakeInterceptorImpl     : Incoming connection from /[0:0:0:0:0:0:0:1]:14545
+2026-03-30T23:45:23.821+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] l.server.io.RequestLoggingFilter         : GET /v4/websocket
+2026-03-30T23:45:23.822+05:30  INFO 2884 --- [Lavalink] [  XNIO-1 task-3] lavalink.server.io.SocketServer          : Connection successfully established from shoukaku/4.3.0 (https://github.com/shipgirlproject/Shoukaku.git)
+2026-03-30T23:45:23.836+05:30  INFO 2884 --- [Lavalink] [   XNIO-1 I/O-9] lavalink.server.io.SocketServer          : Connection closed from /[0:0:0:0:0:0:0:1]:14545 with id houipb7gyr0q6iey -- CloseStatus[code=1000, reason=]
+2026-03-30T23:45:23.837+05:30  INFO 2884 --- [Lavalink] [   XNIO-1 I/O-9] lavalink.server.io.SocketContext         : Shutting down 0 playing players.
+2026-03-31T03:33:18.910+05:30  INFO 2884 --- [Lavalink] [   XNIO-1 I/O-7] lavalink.server.io.SocketServer          : Connection closed from /[0:0:0:0:0:0:0:1]:11476 with id l1pvbqc51g9zcsnb -- CloseStatus[code=1006, reason=]
+2026-03-31T03:33:18.916+05:30  INFO 2884 --- [Lavalink] [   XNIO-1 I/O-7] lavalink.server.io.SocketContext         : Shutting down 0 playing players.

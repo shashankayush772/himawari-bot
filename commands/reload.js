@@ -1,23 +1,29 @@
-module.exports = {
-    name: 'reload',
-    category: 'Dev',
-    aliases: ['restart', 'rl'],
-    cooldown: 5,
-    usage: `reload <category> <command>`,
-    description: 'Reloads a command',
-    execute: async (client, message, args, user, text, prefix) => {
-        
-        if(!args[0]) return message.channel.send('You need to include the command :tools: ')
-        let command = args[0].toLowerCase();
-        try {
-            delete require.cache[require.resolve(`../commands/${command}`)]//Change the path depending on how are your folders located.
-            client.commands.delete(command);
-            const pull = require(`../commands/${command}`);
-            client.commands.set(command, pull);
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const path = require('node:path');
 
-            return message.channel.send(`**${command}** was reloaded succesfully!:white_check_mark:  `);
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('reload')
+        .setDescription('🔄 Hot-reload a command without restarting the bot')
+        .addStringOption(opt => opt.setName('command').setDescription('Command file name to reload').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    async execute(interaction) {
+        const commandName = interaction.options.getString('command').toLowerCase();
+
+        try {
+            const filePath = path.join(__dirname, `${commandName}.js`);
+            delete require.cache[require.resolve(filePath)];
+            const newCommand = require(filePath);
+
+            if ('data' in newCommand && 'execute' in newCommand) {
+                interaction.client.commands.set(newCommand.data.name, newCommand);
+                await interaction.reply(`✅ Command **${commandName}** reloaded successfully!`);
+            } else {
+                await interaction.reply({ content: '❌ That file is missing `data` or `execute`.', ephemeral: true });
+            }
         } catch (error) {
-            return message.channel.send(`There was an error trying to reload **${command}**: \`${error.message}\``);
+            await interaction.reply({ content: `❌ Failed to reload **${commandName}**: \`${error.message}\``, ephemeral: true });
         }
-    }
-}
+    },
+};

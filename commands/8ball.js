@@ -1,24 +1,31 @@
-const Discord = require('discord.js');
-const { MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-  name: '8ball',
-  description: 'Asks a question and let the bot determine your fate :sparkler:',
-  async execute(bot, message, args) {
-    if (!args[0]) return message.channel.send('Please ask a full question!'); // return if no question is commenced
-    const replies = ['Yes.', 'No.', 'Never.', 'Definitely.', 'Ask again later.']; // random responses
+    data: new SlashCommandBuilder()
+        .setName('8ball')
+        .setDescription('🎱 Ask the magic 8-ball a question and let fate decide!')
+        .addStringOption(opt =>
+            opt.setName('question').setDescription('The question to ask').setRequired(true)
+        ),
 
-    const result = Math.floor(Math.random() * replies.length); // Get a random respons for the array
-    const question = args.join(' '); // join the args(Array<string>) to a question string
-    // check permissions for embed
-    if (message.channel.permissionsFor(message.guild.me).has('EMBED_LINKS')) {
-      const embed = new MessageEmbed() // create embed 
-        .setAuthor('🎱 The 8 Ball says...')
-        .setColor('ORANGE').addField('Question:', question)
-        .addField('Answer:', replies[result]);
-      await message.channel.send(embed); // send embed message
-    } else {
-      await message.channel.send(`**Question:**\n${question}\n**Answer:**\n${replies[result]}`); // no permissins so bot will default to a raw message
-    }
-  },
+    async execute(interaction) {
+        const question = interaction.options.getString('question');
+        const replies = [
+            'Yes.', 'No.', 'Never.', 'Definitely.', 'Ask again later.',
+            'Most likely.', 'Absolutely not.', 'Without a doubt.', 'Better not tell you now.',
+            'My sources say no.', 'Outlook good.', 'Very doubtful.', 'It is certain.', 'Don\'t count on it.'
+        ];
+        const result = replies[Math.floor(Math.random() * replies.length)];
+
+        const embed = new EmbedBuilder()
+            .setAuthor({ name: '🎱 The 8 Ball says...' })
+            .setColor(0xE67E22)
+            .addFields(
+                { name: '❓ Question', value: question },
+                { name: '🎱 Answer', value: result }
+            )
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+    },
 };

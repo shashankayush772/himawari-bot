@@ -1,26 +1,40 @@
-const Discord = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ChannelType } = require('discord.js');
+
 module.exports = {
-    name: 'server-info',
-    description: "this is a command",
-    execute(bot, message , args) {
-        let embed = new Discord.MessageEmbed()
-        .setTimestamp()
-    .setTitle("**Server Information**")
-    .setColor('RANDOM')
-    .setThumbnail(message.guild.iconURL({ dynamic: true }))
-    .addField(`🎫 Name of server:\n`, message.guild.name, true)
-    .addField(`🆔 ID of server\n`, message.guild.id, true)
-    .addField(`👑 Owner of server\n`, message.guild.owner, true)  
-    .addField(`🗺 Region of server`, message.guild.region, true)
-    .addField(`👥 Member total`, message.guild.members.cache.size, true)
-    .addField(`🤖 Bots:`, message.guild.members.cache.filter(member => member.user.bot).size, true)
-    .addField(`🚶 Weights:`, message.guild.members.cache.filter(member => !member.user.bot).size, true)
-    .addField(`😗 Emojis:`, message.guild.emojis.cache.size, true)
-    .addField(`👻 Animated Emoji\'s:`,message.guild.emojis.cache.filter(emoji => emoji.animated).size,true )
-    .addField(`💬 Total Text Channels:`, message.guild.channels.cache.filter(channel => channel.type === 'text').size, true)
-    .addField(`🎤 Total Voice Channels:`, message.guild.channels.cache.filter(channel => channel.type === 'voice').size, true)
-    .addField(`👔 Total Amount of Roles:`, message.guild.roles.cache.size, true)
-    .setAuthor(message.author.username, message.author.displayAvatarURL({format: 'png'}))
-        message.channel.send(embed);    
-    }
-}
+    data: new SlashCommandBuilder()
+        .setName('serverinfo')
+        .setDescription('🏠 Display detailed information about this server'),
+
+    async execute(interaction) {
+        const guild = interaction.guild;
+        const owner = await guild.fetchOwner();
+
+        const textChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText).size;
+        const voiceChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildVoice).size;
+        const bots = guild.members.cache.filter(m => m.user.bot).size;
+        const humans = guild.members.cache.filter(m => !m.user.bot).size;
+
+        const embed = new EmbedBuilder()
+            .setTitle('📋 **Server Information**')
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setThumbnail(guild.iconURL({ dynamic: true, size: 512 }))
+            .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) })
+            .addFields(
+                { name: '🎫 Name', value: guild.name, inline: true },
+                { name: '🆔 ID', value: guild.id, inline: true },
+                { name: '👑 Owner', value: `${owner.user}`, inline: true },
+                { name: '👥 Members', value: `${guild.memberCount}`, inline: true },
+                { name: '🤖 Bots', value: `${bots}`, inline: true },
+                { name: '🚶 Humans', value: `${humans}`, inline: true },
+                { name: '😀 Emojis', value: `${guild.emojis.cache.size}`, inline: true },
+                { name: '✨ Animated Emojis', value: `${guild.emojis.cache.filter(e => e.animated).size}`, inline: true },
+                { name: '💬 Text Channels', value: `${textChannels}`, inline: true },
+                { name: '🎤 Voice Channels', value: `${voiceChannels}`, inline: true },
+                { name: '👔 Roles', value: `${guild.roles.cache.size}`, inline: true },
+                { name: '📅 Created', value: `<t:${Math.floor(guild.createdTimestamp / 1000)}:R>`, inline: true }
+            )
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+    },
+};

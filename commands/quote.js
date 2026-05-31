@@ -1,40 +1,37 @@
-// npm i canvacord
-const canvacord = require('canvacord');
-// npm i discord.js
-const Discord = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+
 module.exports = {
-    name: 'reply',
-    description: 'Generate a fake image of a member replying to another member!',
-    aliases: ['fakereply'],
-    group: 'image',
-    guildOnly: true,
-    parameters: ['Member 1', 'Member 2', 'Main Message', 'Reply Message'],
-    examples: ['reply @Coffee | @Zed | I am epic | Facts'],
-    preview: 'https://cdn.discordapp.com/attachments/811786924426919980/814499812271063059/replyimage.png',
-    clientPermissions: ['ATTACH_FILES'],
-    execute: async (bot, message, args) => {
-      const replyArgs = message.content.split(" ").slice(1).join(" ").split("\n").join("").split(" | ");
-      const member1 = message.mentions.members.first(5)[0] || message.guild.members.cache.get(replyArgs[0]);
-        if(!member1) return message.channel.send("Please provide the first member!")
-      const member2 = message.mentions.members.first(5)[1] || message.guild.members.cache.get(replyArgs[1]);
-        if(!member2) return message.channel.send("Pleade rpovide the second member!")
-        const msg1 = replyArgs[2];
-        if(!msg1) return message.channel.send("Please provide the main message!")
-        const msg2 = replyArgs[3]
-        if(!msg2) return message.channel.send("Please provide the reply message!")
-const img = member1.user.displayAvatarURL({ format: 'png' })
-const img2 = member2.user.displayAvatarURL({ format: 'png' })
-let k = await canvacord.Canvas.reply({
-     avatar1: img,
-     avatar2: img2,
-     user1: member1.displayName,
-     user2: member2.displayName,
-     hex1: member1.displayHexColor,
-     hex2: member2.displayHexColor,
-     mainText: msg1,
-     replyText: msg2
-})
-const replyimg = new Discord.MessageAttachment(k, 'replyimage.png')
-return message.channel.send(replyimg)
-    }
-}
+    data: new SlashCommandBuilder()
+        .setName('reply')
+        .setDescription('💬 Generate a fake reply between two members')
+        .addUserOption(opt => opt.setName('member1').setDescription('The first member (replier)').setRequired(true))
+        .addUserOption(opt => opt.setName('member2').setDescription('The second member (original)').setRequired(true))
+        .addStringOption(opt => opt.setName('main_message').setDescription('The original message').setRequired(true))
+        .addStringOption(opt => opt.setName('reply_message').setDescription('The reply message').setRequired(true)),
+
+    async execute(interaction) {
+        const member1 = interaction.options.getMember('member1');
+        const member2 = interaction.options.getMember('member2');
+        const mainMsg = interaction.options.getString('main_message');
+        const replyMsg = interaction.options.getString('reply_message');
+
+        if (!member1 || !member2) {
+            return interaction.reply({ content: '❌ Both members must be in this server.', ephemeral: true });
+        }
+
+        const embed = new EmbedBuilder()
+            .setColor(0x2F3136)
+            .setTitle('💬 Fake Reply')
+            .setDescription(
+                `╭ **${member2.displayName}** said:\n` +
+                `│ *"${mainMsg}"*\n` +
+                `╰ ↩️ **${member1.displayName}** replied:\n` +
+                `  *"${replyMsg}"*`
+            )
+            .setThumbnail(member1.user.displayAvatarURL({ dynamic: true }))
+            .setFooter({ text: member2.displayName, iconURL: member2.user.displayAvatarURL({ dynamic: true }) })
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+    },
+};

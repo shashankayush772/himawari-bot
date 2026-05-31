@@ -1,32 +1,37 @@
-const Discord = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-  name: "members",
-  aliases: ["mbs"],
-  category: "Information",
-  description: "Show Discord Server Members!",
-  usage: "Members",
-  execute: async (bot, message, args) => {
+    data: new SlashCommandBuilder()
+        .setName('members')
+        .setDescription('👥 Display a breakdown of server members'),
 
-    const Online = message.guild.members.cache.filter(Mem => Mem.presence.status === "online"), Offline = await message.guild.members.cache.filter(Mem => Mem.presence.status === "offline"), Idle = await message.guild.members.cache.filter(Mem => Mem.presence.status === "idle"), Dnd = await message.guild.members.cache.filter(Mem => Mem.presence.status === "dnd");
-    const Bots = await message.guild.members.cache.filter(Mem => Mem.user.bot), Humans = await message.guild.members.cache.filter(Mem => !Mem.user.bot), Players = await message.guild.members.cache.filter(Mem => Mem.presence.activities && Mem.presence.activities[0] && Mem.presence.activities[0].type === "PLAYING"), Websites = await message.guild.members.cache.filter(Mem => Mem.presence.clientStatus && Object.keys(Mem.presence.clientStatus).includes("web")), Desktop = await message.guild.members.cache.filter(Mem => Mem.presence.clientStatus && Object.keys(Mem.presence.clientStatus).includes("desktop")), Mobile = await message.guild.members.cache.filter(Mem => Mem.presence.clientStatus && Object.keys(Mem.presence.clientStatus).includes("mobile"));
-    let SameTag = await message.guild.members.cache.map(Mem => Mem.user.discriminator), Fake = [], Original = [];
+    async execute(interaction) {
+        await interaction.deferReply();
+        const guild = interaction.guild;
 
-    for (let i = 0; i < SameTag.length; i++) {
-      if (Fake.includes(SameTag[i])) await Original.push(SameTag[i]);
-      await Fake.push(SameTag[i]);
-    };
+        await guild.members.fetch();
 
-    SameTag = Original.length;
+        const total = guild.memberCount;
+        const humans = guild.members.cache.filter(m => !m.user.bot).size;
+        const bots = guild.members.cache.filter(m => m.user.bot).size;
+        const online = guild.members.cache.filter(m => m.presence?.status === 'online').size;
+        const idle = guild.members.cache.filter(m => m.presence?.status === 'idle').size;
+        const dnd = guild.members.cache.filter(m => m.presence?.status === 'dnd').size;
+        const offline = total - online - idle - dnd;
 
-    const Embed = new Discord.MessageEmbed()
-    .setColor('#00ffeb')
-    .setTitle("Members Information!")
-    .setDescription(`Total - **${message.guild.memberCount}**\nHuman - **${Humans.size}**\nBots - **${Bots.size}**\nOnline - **${Online.size}** | Idle - **${Idle.size}** | Do Not Distrub - **${Dnd.size}** | Offline - **${Offline.size}**\nPlaying - **${Players.size}**\nDiscord In Website - **${Websites.size}** | Desktop - **${Desktop.size}** | Mobile - **${Mobile.size}**\nSame Discriminator - **${SameTag}**`)
-    .setFooter(`Requested By ${message.author.username}`)
-    .setTimestamp()
-    .setImage(message.guild.iconURL({ dynamic: true }));
+        const embed = new EmbedBuilder()
+            .setColor(0x00FFEB)
+            .setTitle('👥 Members Information')
+            .setDescription(
+                `**Total** — ${total}\n` +
+                `**Humans** — ${humans}\n` +
+                `**Bots** — ${bots}\n\n` +
+                `🟢 Online — **${online}** | 🌙 Idle — **${idle}** | ⛔ DND — **${dnd}** | ⚫ Offline — **${offline}**`
+            )
+            .setFooter({ text: `Requested by ${interaction.user.username}` })
+            .setThumbnail(guild.iconURL({ dynamic: true }))
+            .setTimestamp();
 
-    return message.channel.send(Embed);
-  }
+        await interaction.editReply({ embeds: [embed] });
+    },
 };

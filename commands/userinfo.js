@@ -1,77 +1,37 @@
-const { MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    name: "userinfo",
-    execute: async (bot, message, args) => {
-        let user = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || message.member;
+    data: new SlashCommandBuilder()
+        .setName('userinfo')
+        .setDescription('👤 Display detailed info about a user')
+        .addUserOption(opt =>
+            opt.setName('user').setDescription('The user to inspect (defaults to you)')
+        ),
 
-        let status;
-        switch (user.presence.status) {
-            case "online":
-                status = "online";
-                break;
-            case "dnd":
-                status = "dnd";
-                break;
-            case "idle":
-                status = "idle";
-                break;
-            case "offline":
-                status = "offline";
-                break;
-        }
+    async execute(interaction) {
+        const member = interaction.options.getMember('user') || interaction.member;
+        const user = member.user;
 
-        const embed = new MessageEmbed()
-            .setTitle(`${user.user.username} stats`)
-            .setColor(`RANDOM`)
-            .setThumbnail(user.user.displayAvatarURL({dynamic : true}))
+        const status = member.presence?.status || 'offline';
+        const statusEmoji = { online: '🟢', idle: '🌙', dnd: '⛔', offline: '⚫' };
+        const activity = member.presence?.activities?.[0]?.name || 'No activity';
+
+        const embed = new EmbedBuilder()
+            .setTitle(`${user.username}'s Info`)
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 512 }))
             .addFields(
-                {
-                    name: "Name: ",
-                    value: user.user.username,
-                    inline: true
-                },
-                {
-                    name: "#️⃣ Discriminator: ",
-                    value: `#${user.user.discriminator}`,
-                    inline: true
-                },
-                {
-                    name: "🆔 ID: ",
-                    value: user.user.id,
-                },
-                {
-                    name: "Current Status: ",
-                    value: status,
-                    inline: true
-                },
-                {
-                    name: "Activity: ",
-                    value: user.presence.activities[0] ? user.presence.activities[0].name : `User isn't playing a game!`,
-                    inline: true
-                },
-                {
-                    name: 'Avatar link: ',
-                    value: `[Click Here](${user.user.displayAvatarURL()})`
-                },
-                {
-                    name: 'Creation Date: ',
-                    value: user.user.createdAt.toLocaleDateString("en-us"),
-                    inline: true
-                },
-                {
-                    name: 'Joined Date: ',
-                    value: user.joinedAt.toLocaleDateString("en-us"),
-                    inline: true
-                },
-                {
-                    name: 'User Roles: ',
-                    value: user.roles.cache.map(role => role.toString()).join("\n"),
-                    inline: false
-                },
-            
+                { name: '👤 Name', value: user.username, inline: true },
+                { name: '🆔 ID', value: user.id, inline: true },
+                { name: `${statusEmoji[status]} Status`, value: status, inline: true },
+                { name: '🎮 Activity', value: activity, inline: true },
+                { name: '🖼️ Avatar', value: `[Click Here](${user.displayAvatarURL({ dynamic: true })})`, inline: true },
+                { name: '📅 Account Created', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>`, inline: true },
+                { name: '📥 Joined Server', value: `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>`, inline: true },
+                { name: '🎭 Roles', value: member.roles.cache.map(r => r.toString()).join(' ') || 'None' }
             )
+            .setTimestamp();
 
-        await message.channel.send(embed)
-    }
-}
+        await interaction.reply({ embeds: [embed] });
+    },
+};

@@ -1,51 +1,239 @@
- const Discord = require('discord.js') 
-const bot = new Discord.Client({ws: {intents: Discord.Intents.ALL}});
+require('dotenv').config();
+const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder } = require('discord.js');
+const { Shoukaku, Connectors } = require('shoukaku');
+const { QueueManager } = require('./utils/queue');
+const { MessageAdapter } = require('./utils/message-adapter');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const fs = require("fs");
-const { execute } = require('./commands/clear');
-
-bot.commands = new Discord.Collection();
-
-
-bot.on('ready', () => {
-    console.log('This bot is online!')
-
-    fs.readdir('./commands', (err, files) => {
-        if(err) return console.log(err);
-
-        let jsfile = files.filter(f => f.split(".").pop() == 'js');
-
-
-        if (jsfile.length <= 0) return console.log("Could not find commands!")
-
-        jsfile.forEach(f => {
-            let props = require(`./commands/${f}`);
-            bot.commands.set(props.name, props)
-        })
-    })
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.MessageContent,
+    ],
+    partials: ['Channel'],
 });
 
-bot.on('message', (message) => {
-    if(message.author.bot) return;
-    if(message.channel.type !== 'text') return;
-if(message.author.id !== '785907081076932638') return;
-    let prefix = 'k!';
+// ── Lavalink (Shoukaku) ────────────────────────────────────
+const lavalinkNodes = [{
+    name: process.env.LAVALINK_NAME || 'Main',
+    url: process.env.LAVALINK_HOST || 'localhost:2333',
+    auth: process.env.LAVALINK_PASSWORD || 'youshallnotpass',
+}];
 
-    
-    
-    let MessageArray = message.content.split(' ');
-    let cmd = MessageArray[0].slice(prefix.length)
-    let args = MessageArray.slice(1)
-
-    if(!message.content.startsWith(prefix)) return;
-
-    let commandfile = bot.commands.get(cmd);
-    if(commandfile) {commandfile.execute(bot, message, args)} 
-       
-    
-    
-
-
+client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
+    moveOnDisconnect: false,
+    reconnectTries: 10,
+    reconnectInterval: 3000,
 });
 
-bot.login("ODY0NzY2MzA0NDg0MzI3NDI0.YO6OYQ._E9aumztjQkbmFV8ElFWFAe5zLc");
+client.shoukaku.on('ready', (name) => console.log(`  🎵 Lavalink node "${name}" connected`));
+client.shoukaku.on('error', (name, error) => console.error(`  ❌ Lavalink "${name}" error:`, error.message));
+client.shoukaku.on('close', (name, code, reason) => console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`));
+
+client.queue = new QueueManager(client);
+
+// ── Load Commands ──────────────────────────────────────────
+client.commands = new Collection();
+
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
+
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    if ('data' in command && 'execute' in command) {
+        client.commands.set(command.data.name, command);
+        console.log(`  ✅ Loaded: /${command.data.name}`);
+    } else {
+        console.log(`  ⚠️  Skipped ${file}: missing "data" or "execute".`);
+    }
+}
+
+// ── Interaction Handler ────────────────────────────────────
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const command = interaction.client.commands.get(interaction.commandName);
+    if (!command) {
+        console.error(`No command matching /${interaction.commandName}`);
+        return;
+    }
+
+    try {
+        await command.execute(interaction);
+
+        // ── Command Usage Logger ──
+        const logChannelId = process.env.LOG_CHANNEL_ID;
+        if (logChannelId) {
+            try {
+                const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
+                if (logChannel) {
+                    const args = interaction.options.data.map(o => `\`${o.name}:\` ${o.value}`).join('\n') || 'None';
+                    const logEmbed = new EmbedBuilder()
+                        .setColor(0x5865F2)
+                        .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) })
+                        .setTitle(`🔧 /${interaction.commandName}`)
+                        .addFields(
+                            { name: '👤 User', value: `<@${interaction.user.id}>`, inline: true },
+                            { name: '📁 Server', value: interaction.guild?.name || 'DM', inline: true },
+                            { name: '💬 Channel', value: `<#${interaction.channelId}>`, inline: true },
+                            { name: '📝 Options', value: args }
+                        )
+                        .setFooter({ text: `User ID: ${interaction.user.id}` })
+                        .setTimestamp();
+                    logChannel.send({ embeds: [logEmbed] }).catch(() => {});
+                }
+            } catch {}
+        }
+    } catch (error) {
+        console.error(`Error in /${interaction.commandName}:`, error);
+        require('fs').appendFileSync('cmd_error.log', `[${new Date().toISOString()}] Error in /${interaction.commandName}:\n${error.stack}\n\n`);
+        const msg = { content: '❌ An error occurred while executing this command.', ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(msg).catch(console.error);
+        } else {
+            await interaction.reply(msg).catch(console.error);
+        }
+    }
+});
+
+// ── Prefix Command Handler ────────────────────────────────
+const DEFAULT_PREFIX = process.env.BOT_PREFIX || '!';
+const { loadPrefixes } = require('./commands/prefix');
+
+function getPrefix(guildId) {
+    try {
+        const prefixes = loadPrefixes();
+        return prefixes[guildId] || DEFAULT_PREFIX;
+    } catch {
+        return DEFAULT_PREFIX;
+    }
+}
+
+client.on(Events.MessageCreate, async (message) => {
+    // Ignore bots, DMs
+    if (message.author.bot || !message.guild) return;
+
+    const prefix = getPrefix(message.guildId);
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/\s+/);
+    const commandName = args.shift().toLowerCase();
+
+    const command = message.client.commands.get(commandName);
+    if (!command) return; // Not a valid command, silently ignore
+
+    // Create adapter that makes the message look like a slash interaction
+    const adapter = new MessageAdapter(message, commandName, args, command.data);
+
+    try {
+        await command.execute(adapter);
+
+        // ── Command Usage Logger (prefix) ──
+        const logChannelId = process.env.LOG_CHANNEL_ID;
+        if (logChannelId) {
+            try {
+                const logChannel = await client.channels.fetch(logChannelId).catch(() => null);
+                if (logChannel) {
+                    const argStr = adapter.options.data.map(o => `\`${o.name}:\` ${o.value}`).join('\n') || 'None';
+                    const logEmbed = new EmbedBuilder()
+                        .setColor(0xEB459E)
+                        .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+                        .setTitle(`🔧 ${prefix}${commandName}`)
+                        .addFields(
+                            { name: '👤 User', value: `<@${message.author.id}>`, inline: true },
+                            { name: '📁 Server', value: message.guild?.name || 'DM', inline: true },
+                            { name: '💬 Channel', value: `<#${message.channelId}>`, inline: true },
+                            { name: '📝 Options', value: argStr }
+                        )
+                        .setFooter({ text: `User ID: ${message.author.id} • Prefix Command` })
+                        .setTimestamp();
+                    logChannel.send({ embeds: [logEmbed] }).catch(() => {});
+                }
+            } catch {}
+        }
+    } catch (error) {
+        console.error(`Error in ${prefix}${commandName}:`, error);
+        require('fs').appendFileSync('cmd_error.log', `[${new Date().toISOString()}] Error in ${prefix}${commandName}:\n${error.stack}\n\n`);
+        message.reply('❌ An error occurred while executing this command.').catch(() => {});
+    }
+});
+
+client.on(Events.MessageCreate, async (message) => {
+    if (!message.guild && !message.author.bot) {
+        console.log(`  📩 [DEBUG] DM received from ${message.author.tag}: "${message.content?.substring(0, 50)}"`);
+        const dmLogId = process.env.DM_LOG_CHANNEL_ID;
+        if (!dmLogId) { console.log('  📩 [DEBUG] No DM_LOG_CHANNEL_ID set'); return; }
+        try {
+            const logChannel = await client.channels.fetch(dmLogId).catch(() => null);
+            if (!logChannel) { console.log(`  📩 [DEBUG] Could not fetch channel ${dmLogId}`); return; }
+
+            const embed = new EmbedBuilder()
+                .setColor(0xED4245)
+                .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+                .setTitle('📩 New DM Received')
+                .setDescription(message.content || '*No text content*')
+                .setFooter({ text: `User ID: ${message.author.id}` })
+                .setTimestamp();
+
+            if (message.attachments.size > 0) {
+                const files = message.attachments.map(a => `[📎 ${a.name}](${a.url})`).join('\n');
+                embed.addFields({ name: '📎 Attachments', value: files });
+            }
+
+            await logChannel.send({ embeds: [embed] });
+            console.log('  📩 [DEBUG] DM log sent successfully');
+        } catch (err) {
+            console.error('  📩 [DEBUG] DM log error:', err.message);
+        }
+    }
+});
+
+// ── Snipe Cache (deleted messages) ────────────────────────
+client.snipes = new Map();
+
+client.on(Events.MessageDelete, (message) => {
+    if (!message.guild || message.author?.bot) return;
+
+    client.snipes.set(message.channelId, {
+        content: message.content,
+        author: message.author,
+        attachmentURL: message.attachments.first()?.url || null,
+        channelName: message.channel.name,
+        deletedAt: new Date(),
+    });
+
+    // Auto-clear after 5 minutes
+    setTimeout(() => {
+        const cached = client.snipes.get(message.channelId);
+        if (cached && cached.deletedAt.getTime() === new Date().getTime() - 300_000) {
+            client.snipes.delete(message.channelId);
+        }
+    }, 300_000);
+});
+
+// ── Ready ──────────────────────────────────────────────────
+client.once(Events.ClientReady, (c) => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`  🤖 Bot: ${c.user.tag}`);
+    console.log(`  📡 Servers: ${c.guilds.cache.size}`);
+    console.log(`  📝 Commands: ${c.commands.size}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+});
+
+// ── Crash Prevention ───────────────────────────────────────
+process.on('unhandledRejection', (err) => {
+    console.error('  ⚠️ Unhandled Rejection:', err.message || err);
+});
+process.on('uncaughtException', (err) => {
+    console.error('  ⚠️ Uncaught Exception:', err.message || err);
+});
+
+client.login(process.env.DISCORD_TOKEN);

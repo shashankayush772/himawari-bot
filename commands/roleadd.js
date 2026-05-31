@@ -1,38 +1,27 @@
-const { MessageEmbed } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-  
-    name: "roleadd",
-    description: "Add a role to a member",
-    usage: "m/roleadd <member mention/id> <role mention/role id>",
-    aliases: ['role add', 'radd']
-  ,
-  execute: async (bot, message, args) => {
+    data: new SlashCommandBuilder()
+        .setName('roleadd')
+        .setDescription('➕ Add a role to a member')
+        .addUserOption(opt => opt.setName('user').setDescription('The member').setRequired(true))
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to add').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
 
-  
+    async execute(interaction) {
+        const member = interaction.options.getMember('user');
+        const role = interaction.options.getRole('role');
 
-    let rMember = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
+        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
+        if (member.roles.cache.has(role.id)) {
+            return interaction.reply({ content: `❌ **${member.displayName}** already has the **${role.name}** role.`, ephemeral: true });
+        }
 
-    if(!rMember) return message.channel.send("Please provide a user to add a role too.")
-    
-    let role = message.guild.roles.cache.find(r => r.name == args[1]) || message.guild.roles.cache.find(r => r.id == args[1]) || message.mentions.roles.first()
-    
-    if(!role) return message.channel.send("Please provide a role to add to said user.") 
-    
-
-    if(!message.guild.me.hasPermission(["MANAGE_ROLES"])) return message.channel.send("I don't have permission to perform this command. Please give me Manage Roles Permission!")
-
-    if(rMember.roles.cache.has(role.id)) {
-        
-      return message.channel.send(`${rMember.displayName}, already has the role!`)
-    
-    } else {
-        
-      await rMember.roles.add(role.id).catch(e => console.log(e.message))
-      
-      message.channel.send(`${rMember.displayName} has been added to **${role.name}**`)
-    
-    }
-
-  },
+        try {
+            await member.roles.add(role);
+            await interaction.reply(`✅ **${member.displayName}** has been given the **${role.name}** role.`);
+        } catch {
+            await interaction.reply({ content: '❌ Failed to add role. Check bot permissions and role hierarchy.', ephemeral: true });
+        }
+    },
 };

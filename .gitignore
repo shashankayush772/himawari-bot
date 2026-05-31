@@ -1,0 +1,8 @@
+node_modules/
+.env
+json.sqlite
+package-lock.json
+cmd_error.log
+.local/
+.replit
+replit.nix

@@ -1,19 +1,24 @@
-const Discord = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    name: 'bot-ping',
-    description: 'ping command',
-    async execute(bot, message, args) {
-            let member = message.member;
-            let embed = new Discord.MessageEmbed()
-            .setColor('RANDOM')
-            .setTitle(`PONG! ⚡`)
-            .setThumbnail(member.user.displayAvatarURL())
+    data: new SlashCommandBuilder()
+        .setName('ping')
+        .setDescription('🏓 Check bot latency and API response time'),
+
+    async execute(interaction) {
+        const sent = await interaction.reply({ content: '🏓 Pinging...', fetchReply: true });
+        const latency = sent.createdTimestamp - interaction.createdTimestamp;
+
+        const embed = new EmbedBuilder()
+            .setColor(0x5865F2)
+            .setTitle('🏓 PONG!')
+            .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
             .addFields(
-                {name: 'Latency', value: `\`${Date.now() - message.createdTimestamp}ms\``},
-                {name: 'API Latency', value: `\`${Math.round(bot.ws.ping)}ms\``},
+                { name: '⏱️ Latency', value: `\`${latency}ms\``, inline: true },
+                { name: '📡 API Latency', value: `\`${Math.round(interaction.client.ws.ping)}ms\``, inline: true }
             )
-    message.channel.send(embed);
-    
-    }
-}
+            .setTimestamp();
+
+        await interaction.editReply({ content: null, embeds: [embed] });
+    },
+};

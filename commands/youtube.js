@@ -1,32 +1,41 @@
-const Discord = require('discord.js'); 
-const { MessageEmbed } = require('discord.js');
-const ytsr = require("ytsr");
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const ytsr = require('ytsr');
 
 module.exports = {
-    name: "youtube",
-    description: "searches videos on youtube!",
-    usage: "youtube <channel> <video>",
-    category: "youtube video",
-    execute: async (bot, message, args) => {
-        if(message.author.id !== '808729440091373599') return message.channel.send(':x: | Only Owner can use this command!');
-    const query = args.join(" ");
-    if(!query) return message.channel.send("Please provide a search query!");
+    data: new SlashCommandBuilder()
+        .setName('youtube')
+        .setDescription('🎬 Search for videos on YouTube')
+        .addStringOption(opt =>
+            opt.setName('query').setDescription('What to search for').setRequired(true)
+        ),
 
-    const res = await ytsr(query).catch(e => {
-        return message.channel.send("No results were found!");
-    });
+    async execute(interaction) {
+        const query = interaction.options.getString('query');
+        await interaction.deferReply();
 
-    const video = res.items.filter(i => i.type == "video" )[0];
-    if(!video) return message.channel.send("No results were found!");
+        try {
+            const res = await ytsr(query, { limit: 10 });
+            const video = res.items.find(i => i.type === 'video');
 
-    const embed = new MessageEmbed()
-    .setTitle(video.title)
-    .setImage(video.bestThumbnail.url)
-    .setColor("#00ffeb")
-    .setDescription(`**[${video.url}](${video.url})**`)
-    .setAuthor(video.author.name)
-    .addField("Views", video.views.toLocaleString(), true)
-    .addField("Duration", video.duration, true)
+            if (!video) {
+                return interaction.editReply('❌ No video results found!');
+            }
 
-    return message.channel.send(embed);
-}};
+            const embed = new EmbedBuilder()
+                .setTitle(video.title)
+                .setURL(video.url)
+                .setImage(video.bestThumbnail?.url || null)
+                .setColor(0xFF0000)
+                .setAuthor({ name: video.author?.name || 'Unknown' })
+                .addFields(
+                    { name: '👁️ Views', value: video.views?.toLocaleString() || 'N/A', inline: true },
+                    { name: '⏱️ Duration', value: video.duration || 'N/A', inline: true }
+                )
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        } catch {
+            await interaction.editReply('❌ Failed to search YouTube. Try again later!');
+        }
+    },
+};

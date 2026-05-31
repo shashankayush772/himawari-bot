@@ -1,20 +1,18 @@
-const Discord = require('discord.js'); 
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+
 module.exports = {
-    name: "bughelp",
-    description: "Helping format for bug report!" ,
+    data: new SlashCommandBuilder()
+        .setName('bughelp')
+        .setDescription('🐛 Learn how to report a bug'),
 
-    execute: async (bot, message, args) => {
-        
+    async execute(interaction) {
+        const embed = new EmbedBuilder()
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setTitle('🐛 How to Report a Bug')
+            .setDescription('Use the `/bugreport` command to report a bug directly to the developer!\n\n**Example:**\n`/bugreport report:The kick command is not working`')
+            .setFooter({ text: interaction.guild.name })
+            .setTimestamp();
 
-     const Embed = new Discord.MessageEmbed()
-    .setColor("RANDOM")
-    .setTitle(' You can report a bug simply by doing this below! ')
-    .setDescription(" ```You have a cooldown of 20 minutes after reporting a bug to report another bug! \n \n!!bugreport <your report>``` \n \n **I hope you will keep supporting us. So, we can fix the bugs and make our discord server playful!**")
-    .setFooter(message.guild.name)
-    .setTimestamp()
-
-    return message.channel.send(Embed);
-    
-
-    }
-}
+        await interaction.reply({ embeds: [embed] });
+    },
+};

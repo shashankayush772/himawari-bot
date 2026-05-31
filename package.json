@@ -1,29 +1,28 @@
 {
-  "name": "new-bot",
-  "version": "1.0.0",
-  "description": "I'm making this bot for fun and I don't judge anyone, if they use my bot.",
+  "name": "ayush-bot",
+  "version": "2.0.0",
+  "description": "A modernized Discord bot with slash commands — discord.js v14",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node start.js",
+    "deploy": "node deploy-commands.js",
+    "dev": "node start.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "-": "0.0.1",
-    "@discordjs/opus": "^0.5.0",
-    "@iamtraction/google-translate": "^1.1.2",
-    "canvacord": "^5.1.0",
-    "discord-xp": "^1.1.13",
-    "discord.js": "^12.5.3",
-    "ffmpeg-static": "^4.3.0",
-    "lyrics-finder": "^21.7.0",
-    "math.js": "^1.1.46",
+    "@iamtraction/google-translate": "^2.0.1",
+    "@napi-rs/canvas": "^0.1.65",
+    "axios": "^1.7.9",
+    "cpu-stat": "^2.0.1",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "mathjs": "^13.2.2",
     "ms": "^2.1.3",
-    "quick.db": "^7.1.3",
-    "twemoji-parser": "^13.0.0",
+    "shoukaku": "^4.3.0",
+    "twemoji-parser": "^14.0.0",
     "weather-js": "^2.0.0",
-    "yt-search": "^2.7.6",
-    "ytdl-core": "^4.5.0",
-    "ytsr": "^3.4.0"
+    "wikijs": "^6.4.1",
+    "ytsr": "^3.8.4"
   }
 }

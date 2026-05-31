@@ -1,31 +1,36 @@
-const Discord = require("discord.js");
-const { parse } = require("twemoji-parser");
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { parse } = require('twemoji-parser');
 
 module.exports = {
-    name: "enlarge",
-    aliases: ['big', 'large'],
-    cooldown: 1800,
-    description: 'let users report bugs',
-    async execute(bot, message, args){
-    
-    const emoji = args[0];
-    if (!emoji) return message.channel.send("No emoji provided!");
+    data: new SlashCommandBuilder()
+        .setName('enlarge')
+        .setDescription('🔍 Enlarge an emoji to full size')
+        .addStringOption(opt =>
+            opt.setName('emoji').setDescription('The emoji to enlarge').setRequired(true)
+        ),
 
-    let custom = Discord.Util.parseEmoji(emoji);
-    const embed = new Discord.MessageEmbed()
-    .setTitle(`Enlarged version of ${emoji}`)
-    .setColor("#FFFF00");
+    async execute(interaction) {
+        const emoji = interaction.options.getString('emoji');
 
-    if (custom.id) {
-        embed.setImage(`https://cdn.discordapp.com/emojis/${custom.id}.${custom.animated ? "gif" : "png"}`);
-        return message.channel.send(embed);
-    }
-    else {
-        let parsed = parse(emoji, { assetType: "png" });
-        if (!parsed[0]) return message.channel.send("Invalid emoji!");
+        // Check for custom Discord emoji: <:name:id> or <a:name:id>
+        const customMatch = emoji.match(/<(a)?:(\w+):(\d+)>/);
 
-        embed.setImage(parsed[0].url);
-        return message.channel.send(embed);
-    }
-    
-}};
+        const embed = new EmbedBuilder()
+            .setTitle(`Enlarged: ${emoji}`)
+            .setColor(0xFEE75C);
+
+        if (customMatch) {
+            const animated = customMatch[1] === 'a';
+            const id = customMatch[3];
+            embed.setImage(`https://cdn.discordapp.com/emojis/${id}.${animated ? 'gif' : 'png'}?size=512`);
+        } else {
+            const parsed = parse(emoji, { assetType: 'png' });
+            if (!parsed[0]) {
+                return interaction.reply({ content: '❌ Invalid emoji!', ephemeral: true });
+            }
+            embed.setImage(parsed[0].url);
+        }
+
+        await interaction.reply({ embeds: [embed] });
+    },
+};

@@ -1,23 +1,27 @@
-const Discord = require("discord.js");
-const Client = new Discord.Client();
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    name: "uptime",
-    execute: async(bot, message, args) => {
-       
-            let days = Math.floor(Client.uptime / 86400000);
-    let hours = Math.floor(Client.uptime / 3600000) % 24;
-    let minutes = Math.floor(Client.uptime / 60000) % 60;
-    let seconds = Math.floor(Client.uptime / 1000) % 60;
+    data: new SlashCommandBuilder()
+        .setName('uptime')
+        .setDescription('⏱️ Check how long the bot has been running'),
 
-    let uptimeE = new Discord.MessageEmbed()
-    .setTitle("UPTIME")
-    .setColor("RANDOM")
-    .setDescription(`\nDay(S) Online: ${days}\n\nHour(S) Online: ${hours}\n\nMinute(S) Online: ${minutes}\n\nSecond(S) Online: ${seconds}`)
-     .setFooter(`Requested By : ${message.author.username}`, message.author.displayAvatarURL({
-                    dynamic: true
-                }))
-    message.channel.send(uptimeE)
-    return;
-        }
-    }
+    async execute(interaction) {
+        const totalSeconds = Math.floor(interaction.client.uptime / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor(totalSeconds / 3600) % 24;
+        const minutes = Math.floor(totalSeconds / 60) % 60;
+        const seconds = totalSeconds % 60;
+
+        const embed = new EmbedBuilder()
+            .setTitle('⏱️ UPTIME')
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+            .setDescription(
+                `\n🗓️ **Days:** ${days}\n⏰ **Hours:** ${hours}\n⏲️ **Minutes:** ${minutes}\n⏱️ **Seconds:** ${seconds}`
+            )
+            .setFooter({ text: `Requested by ${interaction.user.username}`, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) })
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+    },
+};

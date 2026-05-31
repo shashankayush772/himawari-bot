@@ -1,28 +1,31 @@
-const Discord = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+
 module.exports = {
-    name: 'slowmode',
-    description: 'Sets SlowMode for a Channel',
-async execute( bot, message, args){
-    if (!message.member.hasPermission("BAN_MEMBERS")){
-        messages.channel.send(new Discord.MessageEmbed() .setDescription('You Cannot do that, Missing Permissions') .setColor('RED'))
-        return;
-    }
+    data: new SlashCommandBuilder()
+        .setName('slowmode')
+        .setDescription('🐌 Set slowmode for a channel')
+        .addIntegerOption(opt =>
+            opt.setName('seconds').setDescription('Slowmode duration in seconds (0 to disable)').setRequired(true).setMinValue(0).setMaxValue(21600)
+        )
+        .addChannelOption(opt =>
+            opt.setName('channel').setDescription('Target channel (defaults to current)')
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
-    if (!args[0]) return message.channel.send(new Discord.MessageEmbed() .setDescription('Heres the right format to do it!\n```!!slowmode <time>```') .setColor('RANDOM') .setThumbnail((message.guild.iconURL({ dynamic: true }))));
-    if(isNaN(args[0])) return message.channel.send(new Discord.MessageEmbed() .setDescription('Please type a real number!') .setColor('RANDOM'));
-    if (args[0] > 21600 || args[0] < 0) return message.channel.send(new Discord.MessageEmbed() .setDescription('Number must be between 0 - 21600') .setColor('RANDOM'))
+    async execute(interaction) {
+        const seconds = interaction.options.getInteger('seconds');
+        const channel = interaction.options.getChannel('channel') || interaction.channel;
 
-    const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel
+        await channel.setRateLimitPerUser(seconds);
 
-        channel.setRateLimitPerUser(args[0])
-        message.channel.send(new Discord.MessageEmbed() .setDescription(`Slow Mode has been set to "${args[0]}" by the order of **${message.author.tag}**`) .setColor('RANDOM') .setThumbnail((message.guild.iconURL({ dynamic: true }))))
-        return;
+        const embed = new EmbedBuilder()
+            .setDescription(seconds === 0
+                ? `✅ Slowmode has been **disabled** in ${channel} by **${interaction.user.tag}**`
+                : `🐌 Slowmode set to **${seconds}s** in ${channel} by **${interaction.user.tag}**`)
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
+            .setTimestamp();
 
- message.channel.send(new Discord.MessageEmbed() .setDescription(`Slow Mode has been set to "${args[0]}" by the order of **${message.author.tag}**`) .setColor('RANDOM') .setThumbnail((message.guild.iconURL({ dynamic: true }))))
-
-    .catch((e) => {
-        message.channel.send('Error Occured!')
-        e ? console.error(e) : console.log('Uknown Error')
-    })
-}
-}
+        await interaction.reply({ embeds: [embed] });
+    },
+};

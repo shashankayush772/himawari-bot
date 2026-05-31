@@ -1,20 +1,18 @@
-const Discord = require('discord.js'); 
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+
 module.exports = {
-    name: "suggesthelp",
-    description: "Helping format for suggestion!" ,
+    data: new SlashCommandBuilder()
+        .setName('suggesthelp')
+        .setDescription('💡 Learn how to submit a suggestion'),
 
-    execute: async (bot, message, args) => {
-        
+    async execute(interaction) {
+        const embed = new EmbedBuilder()
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setTitle('💡 How to Submit a Suggestion')
+            .setDescription('Use the `/suggest` command to send a suggestion directly to the developers!\n\n**Example:**\n`/suggest suggestion:Add a music feature`')
+            .setFooter({ text: 'We appreciate your feedback!' })
+            .setTimestamp();
 
-     const Embed = new Discord.MessageEmbed()
-    .setColor("RANDOM")
-    .setTitle(' You can give a suggestion simply by doing this below! ')
-    .setDescription(" ```You have a cooldown of 20 minutes after giving a suggestion to give another suggestion! \n \n!!suggest <Your Suggestion>``` \n\n Do it in <#816730490026328065>! \n\n **I hope you will keep supporting us. So, we can plan new things and discord server playful!**")
-    .setTimestamp()
-    
-
-    return message.channel.send(Embed);
-    message.delete();
-
-    }
-}
+        await interaction.reply({ embeds: [embed] });
+    },
+};

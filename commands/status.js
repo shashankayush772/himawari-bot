@@ -1,91 +1,44 @@
-const Discord = require('discord.js'); 
-const { MessageEmbed } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActivityType } = require('discord.js');
 
 module.exports = {
-    name: "status",
-    description: "status changer!" ,
+    data: new SlashCommandBuilder()
+        .setName('status')
+        .setDescription('📡 Change the bot\'s activity status')
+        .addStringOption(opt =>
+            opt.setName('type').setDescription('Activity type').setRequired(true)
+                .addChoices(
+                    { name: 'Playing', value: 'Playing' },
+                    { name: 'Watching', value: 'Watching' },
+                    { name: 'Listening', value: 'Listening' },
+                    { name: 'Streaming', value: 'Streaming' },
+                    { name: 'Competing', value: 'Competing' }
+                )
+        )
+        .addStringOption(opt => opt.setName('text').setDescription('Status text').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-    execute: async (bot, message, args) => {
-    {
-        const type = args[0]
-        const status = args.slice(1).join(" ");
-        if(!status) return message.channel.send(`You must specify a status.`)
-    
-        if(type === 'watching'){
-          bot.user.setActivity(`${status}`, {
-      type: "WATCHING"
-    });
+    async execute(interaction) {
+        const type = interaction.options.getString('type');
+        const text = interaction.options.getString('text');
 
-    const Embed = new Discord.MessageEmbed()
-    .setColor("RANDOM")
-    .setTitle(`Status have been changed to "${args.join(" ")}"  successfully!`)
-    .setTimestamp()
-    .setThumbnail(message.guild.iconURL({ dynamic: true }))
+        const typeMap = {
+            Playing: ActivityType.Playing,
+            Watching: ActivityType.Watching,
+            Listening: ActivityType.Listening,
+            Streaming: ActivityType.Streaming,
+            Competing: ActivityType.Competing,
+        };
 
-    return message.channel.send(Embed);
+        interaction.client.user.setActivity(text, {
+            type: typeMap[type],
+            url: type === 'Streaming' ? 'https://twitch.tv/placeholder' : undefined,
+        });
 
+        const embed = new EmbedBuilder()
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setTitle(`✅ Status changed to "${type} ${text}"`)
+            .setTimestamp();
 
-        } else if(type === 'listening'){
-          bot.user.setActivity(`${status}`, {
-            type: "LISTENING"
-          });
-
-          const Embed = new Discord.MessageEmbed()
-          .setColor("RANDOM")
-          .setTitle(`Status have been changed to "${args.join(" ")}"  successfully!`)
-          .setTimestamp()
-          .setThumbnail(message.guild.iconURL({ dynamic: true }))
-          return message.channel.send(Embed);
-        
-        } else if(type === 'playing'){
-          bot.user.setActivity(`${status}`, {
-            type: "PLAYING"
-          });
-          const Embed = new Discord.MessageEmbed()
-          .setColor("RANDOM")
-          .setTitle(`Status have been changed to "${args.join(" ")}"  successfully!`)
-          .setTimestamp()
-          .setThumbnail(message.guild.iconURL({ dynamic: true }))
-          return message.channel.send(Embed);
-
-
-        } else if(type === 'streaming'){
-          bot.user.setActivity(`${status}`, {
-            type: "STREAMING",
-            url: 'https://discord.gg/rjKV2QaCFx'
-            
-          });
-
-          const Embed = new Discord.MessageEmbed()
-          .setColor("RANDOM")
-          .setTitle(`Status have been changed to "${args.join(" ")}"  successfully!`)
-          .setTimestamp()
-          .setThumbnail(message.guild.iconURL({ dynamic: true }))
-
-          return message.channel.send(Embed);
-
-
-
-        
-        } else if(type === 'competing'){
-          bot.user.setActivity(`${status}`, {
-            type: "COMPETING"
-          });
-
-          
-          const Embed = new Discord.MessageEmbed()
-          .setColor("RANDOM")
-          .setTitle(`Status have been changed to "${args.join(" ")}"  successfully!`)
-          .setTimestamp()
-          .setThumbnail(message.guild.iconURL({ dynamic: true }))
-          
-      
-          return message.channel.send(Embed);
-
-         
-        } else if (type != ['watching', 'listening', 'playing', 'streaming', 'competing']) {
-          message.channel.send("Your type must be valid. The valid status types are as following:\n`watching, listening, playing, streaming, competing`. Please try again, but this time with valid input. Thank you")
-    
-    
-}} 
-}};
+        await interaction.reply({ embeds: [embed] });
+    },
+};

@@ -1,16 +1,23 @@
-const Discord = require('discord.js'); 
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+
 module.exports = {
-    name: "avatar",
-    description: "Shows your avatar!" ,
+    data: new SlashCommandBuilder()
+        .setName('avatar')
+        .setDescription('🖼️ Display a user\'s avatar in full resolution')
+        .addUserOption(opt =>
+            opt.setName('user').setDescription('The user whose avatar to show (defaults to you)')
+        ),
 
-    execute: async (bot, message, args) => {
+    async execute(interaction) {
+        const user = interaction.options.getUser('user') || interaction.user;
 
-    const avatarEmbed = new Discord.MessageEmbed()
-    .setColor("#00ffeb")
-    .setAuthor(message.author.username + '\'s avatar')
-    .setImage(message.author.avatarURL({size: 4096, dynamic: true}));
+        const embed = new EmbedBuilder()
+            .setTitle(`${user.username}'s Avatar`)
+            .setColor(0xFFEFD5)
+            .setImage(user.displayAvatarURL({ dynamic: true, size: 4096 }))
+            .setFooter({ text: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamic: true }) })
+            .setTimestamp();
 
-    message.channel.send(avatarEmbed)
-
-    }
-}
+        await interaction.reply({ embeds: [embed] });
+    },
+};

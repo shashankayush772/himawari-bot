@@ -1,21 +1,21 @@
-const Discord = require('discord.js');
-
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-  name: 'set-avatar',
-  category: 'Owner',
- execute: async (bot, message, args) => { // change your handler
-   let avatarurl = args.join(" ");
-   bot.user.setAvatar(`${avatarurl}`)
-   if (!avatarurl) return message.channel.send("!!set-avatar <link>")
-   let embed = new Discord.MessageEmbed()
-       .setTitle('Avatar has been changed!')
-       .setImage(`${avatarurl}`)
-       .setTimestamp()
-    message.channel.send(embed)
-    .catch(e => {
-        console.log(e)
-        return message.channel.send("Something Went Wrong!")
-    })
-}
-}
+    data: new SlashCommandBuilder()
+        .setName('set-avatar')
+        .setDescription('🖼️ Change the bot\'s avatar')
+        .addStringOption(opt => opt.setName('url').setDescription('Image URL for the new avatar').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    async execute(interaction) {
+        const url = interaction.options.getString('url');
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            await interaction.client.user.setAvatar(url);
+            await interaction.editReply('✅ Bot avatar has been changed!');
+        } catch {
+            await interaction.editReply('❌ Failed to change avatar. Check the URL or try again later (rate limited).');
+        }
+    },
+};

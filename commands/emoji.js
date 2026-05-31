@@ -1,32 +1,45 @@
-'use strict';
-
-const Discord = require('discord.js')
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-    name: 'steal',
-    execute: async (bot, message, args) => {
-        if(!message.member.hasPermission("ADD_EMOJI")) return message.channel.send("You do not have Add emoji permission to execute this command!");
-    if(!args[0]) return message.channel.send('Please specify emoji to add!');
+    data: new SlashCommandBuilder()
+        .setName('steal')
+        .setDescription('😀 Add an emoji to this server')
+        .addStringOption(opt => opt.setName('emoji').setDescription('The emoji or image URL to add').setRequired(true))
+        .addStringOption(opt => opt.setName('name').setDescription('Name for the emoji (required for URL)'))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuildExpressions),
 
-    const emoji = Discord.Util.parseEmoji(args[0]);
-    
-    if(emoji.id){
-        const emojiFormat = emoji.animated ? '.gif' : '.png';
-        const emojiUrl = `https://cdn.discordapp.com/emojis/${emoji.id + emojiFormat}`;
-    
-        await message.guild.emojis.create(emojiUrl, `${args[1] ? args[1] : emoji.name}`)
-            .then((emoji) => {
-                    messag.channel.send(`**${message.author.username}**, emoji \`:${emoji.name}:\` ${emoji} was successfully added.`)
-                }).catch(() => { message.channel.send('Cannot add this emoji, try again later.') });  
-    } else {
-        const emojiLink = args[0];
-        
-        if(!args[1]) return message.channel.send('You must enter a name for the emoji.');
-        if(args[1].length > 32) return message.channel.send('The name of the emoji cannot exceed 32 characters!');
-        await message.guild.emojis.create(emojiLink, args[1])
-                .then((emoji) => {
-                    message.channel.send(`**${message.author.username}**, emoji \`:${emoji.name}:\` ${emoji} was successfully added.`)
-            }).catch(() => { message.channel.send('Cannot add this emoji, try again later.') });
+    async execute(interaction) {
+        const emojiInput = interaction.options.getString('emoji');
+        const customName = interaction.options.getString('name');
+
+        const customMatch = emojiInput.match(/<(a)?:(\w+):(\d+)>/);
+
+        if (customMatch) {
+            const animated = customMatch[1] === 'a';
+            const name = customName || customMatch[2];
+            const id = customMatch[3];
+            const url = `https://cdn.discordapp.com/emojis/${id}.${animated ? 'gif' : 'png'}`;
+
+            try {
+                const emoji = await interaction.guild.emojis.create({ attachment: url, name });
+                await interaction.reply(`✅ **${interaction.user.username}**, emoji \`:${emoji.name}:\` ${emoji} was successfully added!`);
+            } catch {
+                await interaction.reply({ content: '❌ Cannot add this emoji. Server may be at emoji limit.', ephemeral: true });
+            }
+        } else {
+            if (!customName) {
+                return interaction.reply({ content: '❌ You must provide a `name` when adding an emoji from a URL.', ephemeral: true });
+            }
+            if (customName.length > 32) {
+                return interaction.reply({ content: '❌ Emoji name cannot exceed 32 characters.', ephemeral: true });
+            }
+
+            try {
+                const emoji = await interaction.guild.emojis.create({ attachment: emojiInput, name: customName });
+                await interaction.reply(`✅ **${interaction.user.username}**, emoji \`:${emoji.name}:\` ${emoji} was successfully added!`);
+            } catch {
+                await interaction.reply({ content: '❌ Cannot add this emoji. Check the URL or try again.', ephemeral: true });
+            }
         }
-    }
+    },
 };

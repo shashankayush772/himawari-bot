@@ -1,12 +1,23 @@
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+
 module.exports = {
-    name: 'unbanall',
-    execute: async (bot, message, args) => {
-    message.guild.fetchBans().then(bans => {
-    if(!bans) return message.channel.send('No members banned!')
-    bans.forEach(b => {
-        message.guild.members.unban(b.user);
-    });
-    message.channel.send(`Unbanned **${bans.size > 1 ? 'users' : 'user'}**.`);
-    })
-   }
+    data: new SlashCommandBuilder()
+        .setName('unbanall')
+        .setDescription('🔓 Unban all banned users from the server')
+        .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
+
+    async execute(interaction) {
+        await interaction.deferReply();
+        const bans = await interaction.guild.bans.fetch();
+
+        if (bans.size === 0) {
+            return interaction.editReply('ℹ️ No banned members found.');
+        }
+
+        for (const ban of bans.values()) {
+            await interaction.guild.members.unban(ban.user).catch(() => {});
+        }
+
+        await interaction.editReply(`🔓 Unbanned **${bans.size}** ${bans.size === 1 ? 'user' : 'users'}.`);
+    },
 };

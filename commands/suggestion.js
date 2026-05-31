@@ -1,31 +1,33 @@
-const Discord = require('discord.js'); 
-const { MessageEmbed } = require('discord.js');
-
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    name: 'suggest',
-    aliases: ['suggest', 'suggestion'],
-    permissions: [],
-    cooldown: 1800,
-    description: 'creates a suggestion!',
-    async execute(bot, message, args) {
-        const channel = bot.channels.cache.get('857043557079711754');
-        const query = args.join(' ');
-        if(!query) return message.reply('Please specify a suggestion!');
+    data: new SlashCommandBuilder()
+        .setName('suggest')
+        .setDescription('💡 Submit a suggestion to the developers')
+        .addStringOption(opt => opt.setName('suggestion').setDescription('Your suggestion').setRequired(true)),
 
-        let messageArgs = args.join(' ');
-        const reportEmbed = new Discord.MessageEmbed()
-        .setColor('RANDOM')
-        .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
-        .setTitle(`**Name**\n${message.author.username} \n\n**Suggestion**\n`)
-        .setDescription(messageArgs);
+    async execute(interaction) {
+        const suggestion = interaction.options.getString('suggestion');
+        const channelId = process.env.SUGGESTION_CHANNEL_ID;
 
-        return channel.send(reportEmbed).then((msg) =>{
-            msg.react('✅');
-            msg.react('❌');
-            message.delete();
-        }).catch((err)=>{
-            throw err;
-        });
-    }
-}
+        const embed = new EmbedBuilder()
+            .setColor(Math.floor(Math.random() * 0xFFFFFF))
+            .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+            .setTitle(`💡 Suggestion from ${interaction.user.username}`)
+            .setDescription(suggestion)
+            .setTimestamp();
+
+        try {
+            const channel = await interaction.client.channels.fetch(channelId);
+            if (channel) {
+                const msg = await channel.send({ embeds: [embed] });
+                await msg.react('✅');
+                await msg.react('❌');
+            }
+        } catch {
+            // Channel might not be accessible
+        }
+
+        await interaction.reply({ content: '✅ **Your suggestion has been submitted!** Thank you!', ephemeral: true });
+    },
+};

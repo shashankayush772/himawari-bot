@@ -1,35 +1,31 @@
-const { MessageEmbed } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    
-        name: 'roleinfo',
-        description: "shows stats of the mentioned role",
-        usage: "m/roleinfo <role mention/role id>",
-        aliases: ['rinfo', 'rolei']
-    ,
-    execute: async (bot, message, args) => {
-        if (!args[0]) return message.channel.send("**Please Enter A Role!**")
-        let role = message.mentions.roles.first() || message.guild.roles.cache.get(args[0]) || message.guild.roles.cache.find(r => r.name.toLowerCase() === args.join(' ').toLocaleLowerCase());
-        if (!role) return message.channel.send("**Please Enter A Valid Role!**");
+    data: new SlashCommandBuilder()
+        .setName('roleinfo')
+        .setDescription('🎭 Display information about a role')
+        .addRoleOption(opt =>
+            opt.setName('role').setDescription('The role to inspect').setRequired(true)
+        ),
 
-        const status = {
-            false: "No",
-            true: "Yes"
-        }
+    async execute(interaction) {
+        const role = interaction.options.getRole('role');
 
-        let roleembed = new MessageEmbed()
-            .setColor("#2F3136")
-            .setTitle(`Role Info: \`[  ${role.name}  ]\``)
-            .setThumbnail(message.guild.iconURL())
-            .addField("**ID**", `\`${role.id}\``, true)
-            .addField("**Name**", role.name, true)
-            .addField("**Hex**", role.hexColor, true)
-            .addField("**Members**", role.members.size, true)
-            .addField("**Position**", role.position, true)
-            .addField("**Mentionable**", status[role.mentionable], true)
-            .setFooter(message.member.displayName, message.author.displayAvatarURL(), true)
-            .setTimestamp()
+        const embed = new EmbedBuilder()
+            .setColor(role.hexColor === '#000000' ? 0x2F3136 : role.color)
+            .setTitle(`🎭 Role Info: ${role.name}`)
+            .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
+            .addFields(
+                { name: '🆔 ID', value: `\`${role.id}\``, inline: true },
+                { name: '📛 Name', value: role.name, inline: true },
+                { name: '🎨 Color', value: role.hexColor, inline: true },
+                { name: '👥 Members', value: `${role.members.size}`, inline: true },
+                { name: '📊 Position', value: `${role.position}`, inline: true },
+                { name: '📢 Mentionable', value: role.mentionable ? 'Yes' : 'No', inline: true }
+            )
+            .setFooter({ text: interaction.member.displayName, iconURL: interaction.user.displayAvatarURL({ dynamic: true }) })
+            .setTimestamp();
 
-        message.channel.send(roleembed);
-    }
-}
+        await interaction.reply({ embeds: [embed] });
+    },
+};

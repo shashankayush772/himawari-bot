@@ -1,28 +1,22 @@
-
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('dm')
+        .setDescription('📩 Send a DM to a user via the bot')
+        .addUserOption(opt => opt.setName('user').setDescription('The user to DM').setRequired(true))
+        .addStringOption(opt => opt.setName('message').setDescription('The message to send').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
-      name: "dm",
-      description: "DM a user in the guild",
-      aliases: ['pm']
-    ,
-    execute: async (bot, message, args) => {
-        
-       
+    async execute(interaction) {
+        const user = interaction.options.getUser('user');
+        const message = interaction.options.getString('message');
 
-
-      let user =
-        message.mentions.members.first() ||
-        message.guild.members.cache.get(args[0]);
-      if (!user)
-        return message.channel.send(
-          `You did not mention a user, or you gave an invalid id`
-        );
-      if (!args.slice(1).join(" "))
-        return message.channel.send("You did not specify your message");
-      user.user
-        .send(args.slice(1).join(" "))
-        .catch(() => message.channel.send("That user could not be DMed!"))
-        .then(() => message.channel.send(`Sent a message to ${user.user.tag}`));
+        try {
+            await user.send(message);
+            await interaction.reply({ content: `✅ Sent a DM to **${user.tag}**.`, ephemeral: true });
+        } catch {
+            await interaction.reply({ content: `❌ Could not DM **${user.tag}**. They may have DMs disabled.`, ephemeral: true });
+        }
     },
-  };
+};

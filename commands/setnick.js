@@ -1,57 +1,36 @@
-const { MessageEmbed } = require('discord.js');
-const db = require('quick.db');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-    
-        name: "setnick",
-        aliases: ["sn", 'nick'],
-        category: "moderation",
-        description: "Sets Or Changes Nickname Of An User",
-        usage: "[mention | name | nickname | ID] <nickname>",
-    
-    execute: async (bot, message, args) => {
-        
+    data: new SlashCommandBuilder()
+        .setName('setnick')
+        .setDescription('📝 Change a member\'s nickname')
+        .addUserOption(opt => opt.setName('user').setDescription('The member to rename').setRequired(true))
+        .addStringOption(opt => opt.setName('nickname').setDescription('The new nickname').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageNicknames),
 
-        if (!message.guild.me.hasPermission("CHANGE_NICKNAME")) return message.channel.send("**I Dont Have Permissions To Change Nickname! - [CHANGE_NICKNAME]**");
-      
-        if (!args[0]) return message.channel.send("**Please Enter A User!**")
-      
-        let member = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || message.guild.members.cache.find(r => r.user.username.toLowerCase() === args[0].toLocaleLowerCase()) || message.guild.members.cache.find(ro => ro.displayName.toLowerCase() === args[0].toLocaleLowerCase()) || message.member;
-        if (!member) return message.channel.send("**Please Enter A Username!**");
+    async execute(interaction) {
+        const member = interaction.options.getMember('user');
+        const nick = interaction.options.getString('nickname');
 
-        if (member.roles.highest.comparePositionTo(message.guild.me.roles.highest) >= 0) return message.channel.send('**Cannot Set or Change Nickname Of This User!**')
+        if (!member) return interaction.reply({ content: '❌ User not found.', ephemeral: true });
 
-        if (!args[1]) return message.channel.send("**Please Enter A Nickname**");
-
-        let nick = args.slice(1).join(' ');
-
-        try {
-        member.setNickname(nick)
-        const embed = new MessageEmbed()
-            .setColor("GREEN")
-            .setDescription(`**Changed Nickname of ${member.displayName} to ${nick}**`)
-        message.channel.send(embed)
-        } catch {
-            return message.channel.send("**Missing Permissions - [CHANGE_NICKNAME]")
+        if (member.roles.highest.comparePositionTo(interaction.guild.members.me.roles.highest) >= 0) {
+            return interaction.reply({ content: '❌ Cannot change nickname of this user (higher or equal role).', ephemeral: true });
         }
 
-        let channel = db.fetch(`modlog_${message.guild.id}`)
-        if (!channel) return;
+        try {
+            const oldName = member.displayName;
+            await member.setNickname(nick);
 
-        const sembed = new MessageEmbed()
-            .setAuthor(`${message.guild.name} Modlogs`, message.guild.iconURL())
-            .setColor("#ff0000")
-            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-            .setFooter(message.guild.name, message.guild.iconURL())
-            .addField("**Moderation**", "setnick")
-            .addField("**Nick Changed Of**", member.user.username)
-            .addField("**Nick Changed By**", message.author.username)
-            .addField("**Nick Changed To**", args[1])
-            .addField("**Date**", message.createdAt.toLocaleString())
-            .setTimestamp();
+            const embed = new EmbedBuilder()
+                .setColor(0x57F287)
+                .setDescription(`✅ Changed nickname of **${oldName}** → **${nick}**`)
+                .setAuthor({ name: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamic: true }) })
+                .setTimestamp();
 
-            var sChannel = message.guild.channels.cache.get(channel)
-            if (!sChannel) return;
-            sChannel.send(sembed)
-    }
-}
+            await interaction.reply({ embeds: [embed] });
+        } catch {
+            await interaction.reply({ content: '❌ Failed to change nickname. Missing permissions.', ephemeral: true });
+        }
+    },
+};

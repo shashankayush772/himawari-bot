@@ -1,19 +1,32 @@
-const { Client, Message, MessageEmbed } = require("discord.js");
-const translate = require("@iamtraction/google-translate"); //npm i @iamtraction/google-translate
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const translate = require('@iamtraction/google-translate');
+
 module.exports = {
-    name: "translate",
-    description: "trans",
-    async execute(bot, message, args) {
- 
-        const query = args.join(" ");
-        if (!query) return message.reply("Pls spec a text");
-        const translated = await translate(query, (query, { to: "en" })); //change lang prefix here for ex. en for english
-        message.channel.send(translated.text);
- 
- 
- 
- 
- 
-    }
- 
-}
+    data: new SlashCommandBuilder()
+        .setName('translate')
+        .setDescription('🌐 Translate text to English')
+        .addStringOption(opt => opt.setName('text').setDescription('The text to translate').setRequired(true)),
+
+    async execute(interaction) {
+        const text = interaction.options.getString('text');
+        await interaction.deferReply();
+
+        try {
+            const result = await translate(text, { to: 'en' });
+
+            const embed = new EmbedBuilder()
+                .setTitle('🌐 Translation')
+                .setColor(0x5865F2)
+                .addFields(
+                    { name: '📥 Original', value: text },
+                    { name: '📤 Translated (English)', value: result.text }
+                )
+                .setFooter({ text: `Detected language: ${result.from.language.iso || 'unknown'}` })
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        } catch {
+            await interaction.editReply('❌ Translation failed. Try again later!');
+        }
+    },
+};

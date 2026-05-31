@@ -1,30 +1,33 @@
-const Discord = require('discord.js') 
-const { MessageEmbed } = require('discord.js');
-const { execute } = require("./say");
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    name: "bugreport",
-    aliases: ['bug', 'reportbug'],
-    cooldown: 1800,
-    description: 'let users report bugs',
-    async execute(bot, message, args){
-        //the channel you want the bug-reports to be send to
-        const channel = bot.channels.cache.get('857043557079711754')
+    data: new SlashCommandBuilder()
+        .setName('bugreport')
+        .setDescription('🐛 Report a bug directly to the developer')
+        .addStringOption(opt => opt.setName('report').setDescription('Describe the bug').setRequired(true)),
 
-         //look if there is a bug specified
-        const query = args.join(' ');
-        if(!query) return message.reply('Please specify the bug')
-        
-         //create an embed for the bug report
-        const reportEmbed = new Discord.MessageEmbed()
-        .setTitle('New Bug!')
-        .addField('Author', message.author.toString(), true)
-        .addField('Guild', message.guild.name, true)
-        .addField('Report', query)
-        .setThumbnail(message.author.displayAvatarURL({dynamic: true}))
-        .setTimestamp()
-        channel.send(reportEmbed);
-        //send the embed to the channel
-        message.channel.send("**Bug report has been sent!**")
-    }
-}
+    async execute(interaction) {
+        const report = interaction.options.getString('report');
+        const channelId = process.env.BUG_REPORT_CHANNEL_ID;
+
+        const embed = new EmbedBuilder()
+            .setTitle('🐛 New Bug Report!')
+            .setColor(0xED4245)
+            .addFields(
+                { name: '👤 Author', value: interaction.user.toString(), inline: true },
+                { name: '🏠 Server', value: interaction.guild.name, inline: true },
+                { name: '📝 Report', value: report }
+            )
+            .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+            .setTimestamp();
+
+        try {
+            const channel = await interaction.client.channels.fetch(channelId);
+            if (channel) await channel.send({ embeds: [embed] });
+        } catch {
+            // Channel might not be accessible
+        }
+
+        await interaction.reply({ content: '✅ **Bug report has been sent!** Thank you for helping improve the bot.', ephemeral: true });
+    },
+};

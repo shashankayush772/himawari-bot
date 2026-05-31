@@ -1,131 +1,20 @@
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('echo')
+        .setDescription('📢 Mass-ping a user repeatedly (fun/spam)')
+        .addUserOption(opt =>
+            opt.setName('user').setDescription('The user to echo-ping').setRequired(true)
+        ),
 
-    
-        name: "echo",
-        description: "Repeted tag to someone",
-        usage: "echo <user>",
-        aliases: ["echo"]
-       
-    ,
+    async execute(interaction) {
+        const user = interaction.options.getUser('user');
+        const line = `${user} ${user} ${user} ${user} ${user} ${user}`;
 
-
-    execute: async (bot, message, args) => {
-    
-           
-            let user = message.mentions.users.first();
-            if (!user) return message.reply("Please mention a User");
-           
-            await message.channel.send(
-              `${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-            );
-            await message.channel.send(
-              `${user} ${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-            );
-            await message.channel.send(
-              `${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-            );
-            await message.channel.send(
-              `${user} ${user} ${user} ${user} ${user} ${user}`
-            );
-            await message.channel.send(`${user} ${user} ${user} ${user}`);
-            await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user} `
-              );
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(
-                `${user} ${user} ${user} ${user} ${user} ${user}`
-              );
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-              await message.channel.send(`${user} ${user} ${user} ${user}`);
-
-    }}
+        await interaction.reply(line);
+        for (let i = 0; i < 25; i++) {
+            await interaction.channel.send(line);
+        }
+    },
+};
