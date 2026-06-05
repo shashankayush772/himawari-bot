@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { formatDuration } = require('../utils/queue');
+const { formatDuration, buildNowPlayingButtons } = require('../utils/queue');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -100,7 +100,9 @@ module.exports = {
                 .setThumbnail(queue.current.info.artworkUrl || null)
                 .setTimestamp();
 
-            await interaction.editReply({ embeds: [embed] });
+            const buttons = buildNowPlayingButtons(queue);
+            const reply = await interaction.editReply({ embeds: [embed], components: buttons });
+            queue.nowPlayingMessage = reply;
 
             // Set Voice Channel Status via REST API
             try {

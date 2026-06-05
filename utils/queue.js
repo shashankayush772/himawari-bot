@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 function formatDuration(ms) {
     if (!ms || ms === 0) return '🔴 LIVE';
@@ -16,6 +16,37 @@ function progressBar(current, total, length = 20) {
     return '▬'.repeat(filled) + '🔘' + '▬'.repeat(Math.max(length - filled - 1, 0));
 }
 
+function buildNowPlayingButtons(queue) {
+    const isPaused = queue.player.paused;
+    const loopEmoji = { off: '🚫', track: '🔂', queue: '🔁' };
+
+    const row1 = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('np_pause')
+            .setEmoji(isPaused ? '▶️' : '⏸️')
+            .setStyle(isPaused ? ButtonStyle.Success : ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId('np_skip')
+            .setEmoji('⏭️')
+            .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+            .setCustomId('np_stop')
+            .setEmoji('⏹️')
+            .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+            .setCustomId('np_loop')
+            .setEmoji(loopEmoji[queue.loop] || '🚫')
+            .setLabel(queue.loop === 'off' ? 'Loop' : queue.loop === 'track' ? 'Track' : 'Queue')
+            .setStyle(queue.loop === 'off' ? ButtonStyle.Secondary : ButtonStyle.Success),
+        new ButtonBuilder()
+            .setCustomId('np_shuffle')
+            .setEmoji('🔀')
+            .setStyle(ButtonStyle.Secondary)
+    );
+
+    return [row1];
+}
+
 class GuildQueue {
     constructor({ textChannelId, voiceChannelId, player }) {
         this.textChannelId = textChannelId;
@@ -26,6 +57,8 @@ class GuildQueue {
         this.loop = 'off'; // 'off' | 'track' | 'queue'
         this.volume = 80;
         this.is247 = false;
+        this.activeFilter = null;
+        this.nowPlayingMessage = null;
     }
 }
 
@@ -63,6 +96,9 @@ class QueueManager {
             const q = this.get(guildId);
             if (!q) return;
 
+            // Disable buttons on the old Now Playing message
+            this._disableNowPlayingButtons(q);
+
             // Loop: track
             if (q.loop === 'track' && q.current) {
                 player.playTrack({ track: { encoded: q.current.encoded } });
@@ -88,6 +124,9 @@ class QueueManager {
                         { body: { status: "" } }
                     );
                 } catch {}
+
+                // If 24/7, stay in channel
+                if (q.is247) return;
 
                 // Auto-leave after 5 min idle
                 setTimeout(async () => {
@@ -117,9 +156,35 @@ class QueueManager {
         player.on('closed', async (data) => {
             console.log(`  🔒 [DEBUG] Player closed in guild ${guildId}`, data);
             
-            // Clear VC status if possible
             const q = this.get(guildId);
             if (q) {
+                // If 24/7, try to reconnect instead of leaving
+                if (q.is247) {
+                    console.log(`  ♾️ [DEBUG] 24/7 mode — attempting reconnect for guild ${guildId}`);
+                    try {
+                        const newPlayer = await this.client.shoukaku.joinVoiceChannel({
+                            guildId: guildId,
+                            channelId: q.voiceChannelId,
+                            shardId: 0,
+                            deaf: true,
+                        });
+                        q.player = newPlayer;
+                        this._setupEvents(guildId, q);
+                        console.log(`  ✅ [DEBUG] 24/7 reconnected for guild ${guildId}`);
+                    } catch (err) {
+                        console.error(`  ❌ [DEBUG] 24/7 reconnect failed:`, err.message);
+                        try {
+                            await this.client.rest.put(
+                                `/channels/${q.voiceChannelId}/voice-status`,
+                                { body: { status: "" } }
+                            );
+                        } catch {}
+                        this.delete(guildId);
+                    }
+                    return;
+                }
+
+                // Clear VC status
                 try {
                     await this.client.rest.put(
                         `/channels/${q.voiceChannelId}/voice-status`,
@@ -131,6 +196,20 @@ class QueueManager {
             try { await this.client.shoukaku.leaveVoiceChannel(guildId); } catch {}
             this.delete(guildId);
         });
+    }
+
+    async _disableNowPlayingButtons(queue) {
+        if (!queue.nowPlayingMessage) return;
+        try {
+            const msg = queue.nowPlayingMessage;
+            const disabledRows = msg.components.map(row => {
+                const newRow = ActionRowBuilder.from(row);
+                newRow.components.forEach(btn => btn.setDisabled(true));
+                return newRow;
+            });
+            await msg.edit({ components: disabledRows });
+        } catch {}
+        queue.nowPlayingMessage = null;
     }
 
     async _sendNowPlaying(queue) {
@@ -148,7 +227,10 @@ class QueueManager {
                 )
                 .setThumbnail(t.artworkUrl || null)
                 .setTimestamp();
-            ch.send({ embeds: [embed] });
+
+            const buttons = buildNowPlayingButtons(queue);
+            const msg = await ch.send({ embeds: [embed], components: buttons });
+            queue.nowPlayingMessage = msg;
 
             // Set Voice Channel Status
             try {
@@ -163,4 +245,4 @@ class QueueManager {
     }
 }
 
-module.exports = { QueueManager, formatDuration, progressBar };
+module.exports = { QueueManager, formatDuration, progressBar, buildNowPlayingButtons };

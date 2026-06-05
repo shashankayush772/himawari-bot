@@ -1,7 +1,7 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder } = require('discord.js');
 const { Shoukaku, Connectors } = require('shoukaku');
-const { QueueManager } = require('./utils/queue');
+const { QueueManager, buildNowPlayingButtons } = require('./utils/queue');
 const { MessageAdapter } = require('./utils/message-adapter');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -82,6 +82,86 @@ for (const file of commandFiles) {
 
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
+    // ── Now Playing Button Handler ──
+    if (interaction.isButton() && interaction.customId.startsWith('np_')) {
+        const queue = interaction.client.queue.get(interaction.guildId);
+        if (!queue || !queue.current) {
+            return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
+        }
+
+        const action = interaction.customId.replace('np_', '');
+
+        try {
+            switch (action) {
+                case 'pause': {
+                    const isPaused = queue.player.paused;
+                    queue.player.setPaused(!isPaused);
+                    const buttons = buildNowPlayingButtons(queue);
+                    // Update button appearance (pause ↔ resume)
+                    await interaction.update({ components: buttons });
+                    break;
+                }
+                case 'skip': {
+                    const skipped = queue.current.info.title;
+                    queue.player.stopTrack();
+                    await interaction.reply({ content: `⏭️ Skipped **${skipped}**`, ephemeral: true });
+                    break;
+                }
+                case 'stop': {
+                    if (queue.is247) {
+                        queue.tracks = [];
+                        queue.current = null;
+                        queue.player.stopTrack();
+                        await interaction.reply({ content: '⏹️ Stopped playback. (24/7 mode — staying in channel)', ephemeral: true });
+                    } else {
+                        queue.tracks = [];
+                        queue.current = null;
+                        queue.player.stopTrack();
+                        await interaction.client.shoukaku.leaveVoiceChannel(interaction.guildId);
+                        interaction.client.queue.delete(interaction.guildId);
+                        await interaction.reply({ content: '⏹️ Stopped and disconnected.', ephemeral: true });
+                    }
+                    // Disable buttons
+                    try {
+                        const disabledRows = interaction.message.components.map(row => {
+                            const newRow = ActionRowBuilder.from(row);
+                            newRow.components.forEach(btn => btn.setDisabled(true));
+                            return newRow;
+                        });
+                        await interaction.message.edit({ components: disabledRows });
+                    } catch {}
+                    break;
+                }
+                case 'loop': {
+                    const modes = ['off', 'track', 'queue'];
+                    const current = modes.indexOf(queue.loop);
+                    queue.loop = modes[(current + 1) % 3];
+                    const labels = { off: '🚫 Loop Off', track: '🔂 Looping Track', queue: '🔁 Looping Queue' };
+                    const buttons = buildNowPlayingButtons(queue);
+                    await interaction.update({ components: buttons });
+                    break;
+                }
+                case 'shuffle': {
+                    if (queue.tracks.length < 2) {
+                        return interaction.reply({ content: '❌ Not enough tracks to shuffle.', ephemeral: true });
+                    }
+                    for (let i = queue.tracks.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [queue.tracks[i], queue.tracks[j]] = [queue.tracks[j], queue.tracks[i]];
+                    }
+                    await interaction.reply({ content: `🔀 Shuffled **${queue.tracks.length}** tracks!`, ephemeral: true });
+                    break;
+                }
+            }
+        } catch (err) {
+            console.error('Button handler error:', err.message);
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true }).catch(() => {});
+            }
+        }
+        return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     const command = interaction.client.commands.get(interaction.commandName);
