@@ -4,7 +4,7 @@ server:
 
 lavalink:
   plugins:
-    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.0"
+    - dependency: "dev.lavalink.youtube:youtube-plugin:1.18.1"
       repository: "https://maven.lavalink.dev/releases"
       snapshot: false
   server:
@@ -17,10 +17,10 @@ lavalink:
       vimeo: true
       http: true
       local: false
-    bufferDurationMs: 12000
-    frameBufferDurationMs: 12000
+    bufferDurationMs: 20000
+    frameBufferDurationMs: 20000
     youtubePlaylistLoadLimit: 20
-    playerUpdateInterval: 3
+    playerUpdateInterval: 5
     youtubeSearchEnabled: true
     gc-warnings: true
 
@@ -32,9 +32,9 @@ plugins:
     allowDirectPlaylistIds: true
     clients:
       - MUSIC
-      - TVHTML5_SIMPLY
       - WEB
       - ANDROID_VR
+      - TVHTML5_SIMPLY
     oauth:
       enabled: false
 
