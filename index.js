@@ -49,9 +49,9 @@ for (const fb of fallbackNodes) {
 console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
 
 client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
-    moveOnDisconnect: false,
-    reconnectTries: 15,
-    reconnectInterval: 5000,
+    moveOnDisconnect: true,
+    reconnectTries: 50,
+    reconnectInterval: 3000,
 });
 
 client.shoukaku.on('ready', (name) => console.log(`  🎵 Lavalink node "${name}" connected`));
