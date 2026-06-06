@@ -87,7 +87,20 @@ class QueueManager {
         const player = queue.player;
 
         player.on('start', (data) => {
-            console.log(`  🎶 [DEBUG] Track started in guild ${guildId}`);
+            const q = this.get(guildId);
+            const title = q?.current?.info?.title || 'Unknown';
+            const source = q?.current?.info?.sourceName || 'Unknown';
+            console.log(`  🎶 [DEBUG] Track started in guild ${guildId}: "${title}" (source: ${source})`);
+        });
+
+        player.on('exception', async (data) => {
+            console.error(`  💥 [DEBUG] Track exception in guild ${guildId}:`, JSON.stringify(data));
+            const q = this.get(guildId);
+            if (!q) return;
+            try {
+                const ch = await this.client.channels.fetch(q.textChannelId);
+                ch.send(`⚠️ Track failed to play: ${data.message || 'Unknown error'}. Try another song or source.`);
+            } catch {}
         });
 
         player.on('end', async (data) => {

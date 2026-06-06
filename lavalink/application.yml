@@ -31,15 +31,18 @@ plugins:
     allowDirectVideoIds: true
     allowDirectPlaylistIds: true
     clients:
+      - TVHTML5EMBEDDED
+      - ANDROID_TESTSUITE
       - MUSIC
       - WEB
-      - ANDROID_VR
-      - TVHTML5_SIMPLY
     oauth:
-      enabled: false
+      enabled: true
+    pot:
+      token: ""
+      visitorData: ""
 
 logging:
   level:
     root: INFO
     lavalink: INFO
-    dev.lavalink.youtube: WARN
+    dev.lavalink.youtube: DEBUG
