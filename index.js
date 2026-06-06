@@ -21,11 +21,11 @@ const client = new Client({
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// Use external free Lavalink nodes (no need to self-host Java)
+// Using external Lavalink nodes (self-hosting on Render gets IP-blocked by YouTube)
 const lavalinkNodes = [];
 
-// Primary: env-configured node (can be external or local)
-if (process.env.LAVALINK_HOST) {
+// Optional: env-configured node (user's own Lavalink server)
+if (process.env.LAVALINK_HOST && process.env.LAVALINK_HOST !== 'localhost:2333') {
     lavalinkNodes.push({
         name: process.env.LAVALINK_NAME || 'Primary',
         url: process.env.LAVALINK_HOST,
@@ -34,15 +34,17 @@ if (process.env.LAVALINK_HOST) {
     });
 }
 
-// Fallback free public nodes
-const fallbackNodes = [
-    { name: 'Jirayu',     url: 'lavalink.jirayu.net:443',       auth: 'youshallnotpass', secure: true },
-    { name: 'KasawaPro',  url: 'lava.kasawa.pro:2333',          auth: 'youshallnotpass', secure: false },
+// Free public Lavalink v4 nodes (SSL)
+const publicNodes = [
+    { name: 'Jirayu',      url: 'lavalink.jirayu.net:443',           auth: 'youshallnotpass',              secure: true },
+    { name: 'Trinium',     url: 'lavalink-v4.triniumhost.com:443',   auth: 'free',                         secure: true },
+    { name: 'Serenetia',   url: 'lavalinkv4.serenetia.com:443',      auth: 'https://seretia.link/discord',  secure: true },
+    { name: 'MilloHost',   url: 'lava-v4.millohost.my.id:443',       auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
 ];
 
-for (const fb of fallbackNodes) {
-    if (!lavalinkNodes.some(n => n.url === fb.url)) {
-        lavalinkNodes.push(fb);
+for (const node of publicNodes) {
+    if (!lavalinkNodes.some(n => n.url === node.url)) {
+        lavalinkNodes.push(node);
     }
 }
 
