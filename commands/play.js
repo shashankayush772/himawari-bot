@@ -29,9 +29,15 @@ module.exports = {
                 // Direct URL
                 result = await node.rest.resolve(query);
             } else {
-                // Try YouTube Music search first (works with ANDROID_MUSIC client)
-                result = await node.rest.resolve(`ytmsearch:${query}`);
-                // Fallback to regular YouTube search
+                // Public nodes get IP-blocked by YouTube very often (causing 'Unknown error' on playback).
+                // We use SoundCloud search first because it rarely fails and has most songs.
+                result = await node.rest.resolve(`scsearch:${query}`);
+                
+                // Fallback to YouTube Music
+                if (!result || result.loadType === 'empty') {
+                    result = await node.rest.resolve(`ytmsearch:${query}`);
+                }
+                // Fallback to regular YouTube
                 if (!result || result.loadType === 'empty') {
                     result = await node.rest.resolve(`ytsearch:${query}`);
                 }
