@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const { formatDuration, buildNowPlayingButtons } = require('../utils/queue');
 
 module.exports = {
@@ -10,6 +10,11 @@ module.exports = {
     async execute(interaction) {
         const voice = interaction.member?.voice?.channel;
         if (!voice) return interaction.reply({ content: '❌ Join a voice channel first!', ephemeral: true });
+
+        const permissions = voice.permissionsFor(interaction.client.user);
+        if (!permissions.has(PermissionsBitField.Flags.Connect) || !permissions.has(PermissionsBitField.Flags.Speak)) {
+            return interaction.reply({ content: '❌ I do not have permission to **Connect** or **Speak** in your voice channel! Please check the channel permissions.', ephemeral: true });
+        }
 
         const node = interaction.client.shoukaku.getIdealNode?.() 
             || [...interaction.client.shoukaku.nodes.values()][0];

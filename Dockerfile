@@ -1,11 +1,23 @@
-# ── Simple Node.js image (Lavalink is external, no Java needed) ──
-FROM node:20-slim
+# ── Stage 1: Install Node.js dependencies ──
+FROM node:20-slim AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install --omit=dev
+
+# ── Stage 2: Final image with Java + Node.js ──
+FROM eclipse-temurin:21-jre-jammy
+
+# Install Node.js 20 and netcat for port checking
+RUN apt-get update && \
+    apt-get install -y curl netcat-openbsd && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package files and install
-COPY package.json package-lock.json* ./
-RUN npm install --omit=dev
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy application code
 COPY . .
