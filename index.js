@@ -21,28 +21,14 @@ const client = new Client({
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// Using self-hosted Lavalink. SoundCloud search prevents IP blocks.
-const lavalinkNodes = [];
-
-// Primary: local Lavalink node
-lavalinkNodes.push({
-    name: 'Local Node',
-    url: 'localhost:2333',
-    auth: 'youshallnotpass',
-    secure: false,
-});
-
-// Optional: Fallback free public nodes
-const fallbackNodes = [
-    { name: 'Jirayu',      url: 'lavalink.jirayu.net:443',           auth: 'youshallnotpass',              secure: true },
-    { name: 'Trinium',     url: 'lavalink-v4.triniumhost.com:443',   auth: 'free',                         secure: true },
+// External Lavalink nodes only — Render blocks outbound UDP so local Lavalink can't send audio.
+// The external nodes send audio from THEIR servers where UDP works fine.
+const lavalinkNodes = [
+    { name: 'Jirayu',      url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
+    { name: 'Trinium',     url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
+    { name: 'Serenetia',   url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
+    { name: 'MilloHost',   url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
 ];
-
-for (const node of fallbackNodes) {
-    if (!lavalinkNodes.some(n => n.url === node.url)) {
-        lavalinkNodes.push(node);
-    }
-}
 
 console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
 

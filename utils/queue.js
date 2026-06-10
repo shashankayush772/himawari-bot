@@ -96,10 +96,42 @@ class QueueManager {
         player.on('exception', async (data) => {
             console.error(`  💥 [DEBUG] Track exception in guild ${guildId}:`, JSON.stringify(data));
             const q = this.get(guildId);
-            if (!q) return;
+            if (!q || !q.current) return;
+
+            const failedTrack = q.current;
+            const source = failedTrack.info?.sourceName || '';
+            const title = failedTrack.info?.title || '';
+
+            // If a YouTube track fails, auto-retry with SoundCloud
+            if (source === 'youtube' && !q._retrying) {
+                q._retrying = true;
+                console.log(`  🔄 [DEBUG] YouTube failed, retrying "${title}" on SoundCloud...`);
+                try {
+                    const node = this.client.shoukaku.getIdealNode?.()
+                        || [...this.client.shoukaku.nodes.values()][0];
+                    if (node) {
+                        const scResult = await node.rest.resolve(`scsearch:${title}`);
+                        if (scResult && scResult.loadType === 'search' && scResult.data.length > 0) {
+                            const scTrack = scResult.data[0];
+                            q.current = scTrack;
+                            player.playTrack({ track: { encoded: scTrack.encoded } });
+                            try {
+                                const ch = await this.client.channels.fetch(q.textChannelId);
+                                ch.send(`🔄 YouTube stream failed — switched to SoundCloud: **${scTrack.info.title}**`);
+                            } catch {}
+                            q._retrying = false;
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error(`  ❌ [DEBUG] SoundCloud retry failed:`, err.message);
+                }
+                q._retrying = false;
+            }
+
             try {
                 const ch = await this.client.channels.fetch(q.textChannelId);
-                ch.send(`⚠️ Track failed to play: ${data.message || 'Unknown error'}. Try another song or source.`);
+                ch.send(`⚠️ Track failed to play: ${data.message || 'Unknown error'}. Try \`/play\` with a SoundCloud or direct URL.`);
             } catch {}
         });
 
