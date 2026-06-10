@@ -31,20 +31,18 @@ module.exports = {
         let result;
         try {
             if (/^https?:\/\//.test(query)) {
-                // Direct URL
+                // Direct URL (YouTube, SoundCloud, etc.)
                 result = await node.rest.resolve(query);
             } else {
-                // Public nodes get IP-blocked by YouTube very often (causing 'Unknown error' on playback).
-                // We use SoundCloud search first because it rarely fails and has most songs.
-                result = await node.rest.resolve(`scsearch:${query}`);
-                
-                // Fallback to YouTube Music
-                if (!result || result.loadType === 'empty') {
-                    result = await node.rest.resolve(`ytmsearch:${query}`);
-                }
-                // Fallback to regular YouTube
+                // Try YouTube Music search first (best quality)
+                result = await node.rest.resolve(`ytmsearch:${query}`);
+                // Fallback to regular YouTube search
                 if (!result || result.loadType === 'empty') {
                     result = await node.rest.resolve(`ytsearch:${query}`);
+                }
+                // Fallback to SoundCloud
+                if (!result || result.loadType === 'empty') {
+                    result = await node.rest.resolve(`scsearch:${query}`);
                 }
             }
         } catch (err) {
