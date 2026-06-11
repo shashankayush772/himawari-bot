@@ -307,6 +307,31 @@ client.on(Events.MessageDelete, (message) => {
     }, 300_000);
 });
 
+// ── Sticky Nickname Enforcement ────────────────────────────
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+    if (oldMember.nickname === newMember.nickname) return;
+
+    // Dynamically get the stickyNicks map from the loaded command
+    const setnickCmd = client.commands.get('setnick');
+    if (!setnickCmd || !setnickCmd.stickyNicks) return;
+
+    const guildStickies = setnickCmd.stickyNicks.get(newMember.guild.id);
+    if (!guildStickies) return;
+
+    const stickyNick = guildStickies.get(newMember.id);
+    if (!stickyNick) return;
+
+    // If the nickname was changed to something other than the sticky nick, revert it
+    if (newMember.nickname !== stickyNick) {
+        try {
+            await newMember.setNickname(stickyNick, 'Sticky nickname enforced');
+            console.log(`  📌 [STICKY] Reverted ${newMember.user.tag}'s nick back to "${stickyNick}"`);
+        } catch (err) {
+            console.error(`  ⚠️ [STICKY] Failed to enforce nick for ${newMember.user.tag}:`, err.message);
+        }
+    }
+});
+
 // ── Ready ──────────────────────────────────────────────────
 client.once(Events.ClientReady, (c) => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
