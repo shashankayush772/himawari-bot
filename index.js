@@ -21,21 +21,27 @@ const client = new Client({
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// External Lavalink nodes only — Render blocks outbound UDP so local Lavalink can't send audio.
-// The external nodes send audio from THEIR servers where UDP works fine.
+// External nodes only — Render blocks outbound UDP so local Lavalink can't send audio.
+// 8 nodes across different providers for maximum uptime.
 const lavalinkNodes = [
-    { name: 'Jirayu',      url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
-    { name: 'Trinium',     url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
-    { name: 'Serenetia',   url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
-    { name: 'MilloHost',   url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
+    // SSL nodes
+    { name: 'Jirayu-SSL',     url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
+    { name: 'Trinium-SSL',    url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
+    { name: 'Serenetia-SSL',  url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
+    { name: 'MilloHost-SSL',  url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
+    // Non-SSL nodes (more providers = more chances one is up)
+    { name: 'G3V',            url: 'lava.g3v.co.uk:9008',                auth: 'lavalinklol',                   secure: false },
+    { name: 'NexCloud',       url: 'n3.nexcloud.in:2026',                auth: 'nexcloud',                      secure: false },
+    { name: 'VexaNode',       url: 'omega.vexanode.cloud:2031',          auth: 'https://discord.vexanode.cloud', secure: false },
+    { name: 'Kasawa',         url: 'lava.kasawa.pro:2333',               auth: 'youshallnotpass',               secure: false },
 ];
 
 console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
 
 client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
     moveOnDisconnect: true,
-    reconnectTries: 50,
-    reconnectInterval: 3000,
+    reconnectTries: 10,
+    reconnectInterval: 5000,
 });
 
 client.shoukaku.on('ready', (name) => console.log(`  🎵 Lavalink node "${name}" connected`));
@@ -44,6 +50,22 @@ client.shoukaku.on('close', (name, code, reason) => console.warn(`  ⚠️  Lava
 client.shoukaku.on('disconnect', (name, players, moved) => {
     console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players affected: ${players.size}. Moved: ${moved}`);
 });
+
+// ── Auto-reconnect dead nodes every 2 minutes ──
+setInterval(() => {
+    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length; // 2 = CONNECTED
+    if (connectedCount < lavalinkNodes.length) {
+        console.log(`  🔄 [AUTO-RECONNECT] ${connectedCount}/${lavalinkNodes.length} nodes connected. Retrying dead nodes...`);
+        for (const nodeConfig of lavalinkNodes) {
+            const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
+            if (!existingNode || existingNode.state !== 2) {
+                try {
+                    client.shoukaku.addNode(nodeConfig);
+                } catch {}
+            }
+        }
+    }
+}, 120_000);
 
 client.queue = new QueueManager(client);
 

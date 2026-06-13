@@ -16,9 +16,10 @@ module.exports = {
             return interaction.reply({ content: '❌ I do not have permission to **Connect** or **Speak** in your voice channel! Please check the channel permissions.', ephemeral: true });
         }
 
-        const node = interaction.client.shoukaku.getIdealNode?.() 
-            || [...interaction.client.shoukaku.nodes.values()][0];
-        if (!node) return interaction.reply({ content: '❌ No Lavalink node available. Is Lavalink running?', ephemeral: true });
+        // Get a connected node (state 2 = CONNECTED)
+        const connectedNodes = [...interaction.client.shoukaku.nodes.values()].filter(n => n.state === 2);
+        const node = connectedNodes[0] || interaction.client.shoukaku.getIdealNode?.();
+        if (!node) return interaction.reply({ content: '❌ All music servers are currently offline. They auto-reconnect every 2 minutes — please try again shortly!', ephemeral: true });
 
         try {
             await interaction.deferReply();
