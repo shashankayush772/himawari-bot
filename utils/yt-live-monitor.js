@@ -66,34 +66,41 @@ async function resolveChannelId(input) {
     return null;
 }
 
-// ── Fetch RSS feed for a channel ───────────────────────────
+// ── Fetch latest videos for a channel using API ──────────────
 async function fetchRSS(channelId) {
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    if (!apiKey) return [];
+
     try {
-        const resp = await axios.get(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`, {
-            timeout: 10000,
-            headers: { 'User-Agent': 'Mozilla/5.0' },
+        const playlistId = channelId.replace(/^UC/, 'UU');
+        const resp = await axios.get(`https://www.googleapis.com/youtube/v3/playlistItems`, {
+            params: {
+                part: 'snippet',
+                playlistId: playlistId,
+                maxResults: 5,
+                key: apiKey
+            }
         });
-        const xml = resp.data;
 
-        // Simple XML parsing — extract video entries
         const entries = [];
-        const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-        let match;
-        while ((match = entryRegex.exec(xml)) !== null) {
-            const entry = match[1];
-            const videoId = entry.match(/<yt:videoId>([\w-]+)<\/yt:videoId>/)?.[1];
-            const title = entry.match(/<title>([\s\S]*?)<\/title>/)?.[1];
-            const published = entry.match(/<published>([\s\S]*?)<\/published>/)?.[1];
-            const authorName = entry.match(/<author>[\s\S]*?<name>([\s\S]*?)<\/name>/)?.[1];
-            const thumbnail = videoId ? `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` : null;
-
-            if (videoId) {
-                entries.push({ videoId, title, published, authorName, thumbnail });
+        if (resp.data.items) {
+            for (const item of resp.data.items) {
+                const snippet = item.snippet;
+                const videoId = snippet.resourceId.videoId;
+                if (videoId) {
+                    entries.push({
+                        videoId: videoId,
+                        title: snippet.title,
+                        published: snippet.publishedAt,
+                        authorName: snippet.channelTitle,
+                        thumbnail: snippet.thumbnails?.maxres?.url || snippet.thumbnails?.high?.url || `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+                    });
+                }
             }
         }
         return entries;
     } catch (err) {
-        console.error(`  ⚠️ [YT-LIVE] RSS fetch failed for ${channelId}:`, err.message);
+        console.error(`  ⚠️ [YT-LIVE] API fetch latest videos failed for ${channelId}:`, err.response?.data || err.message);
         return [];
     }
 }
