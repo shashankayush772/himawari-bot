@@ -1,6 +1,11 @@
 require('dotenv').config();
 const dns = require('node:dns');
 dns.setDefaultResultOrder('ipv4first'); // Fix IPv6 hanging
+
+// Fix Discord.js v14 (undici) IPv6 hanging
+const { Agent, setGlobalDispatcher } = require('undici');
+setGlobalDispatcher(new Agent({ connect: { family: 4 } }));
+
 const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');

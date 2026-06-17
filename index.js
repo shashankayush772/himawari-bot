@@ -1,6 +1,11 @@
 require('dotenv').config();
 const dns = require('node:dns');
-dns.setDefaultResultOrder('ipv4first'); // Fix IPv6 hanging on Render
+dns.setDefaultResultOrder('ipv4first'); // Fix Node.js native modules IPv6 hanging
+
+// Fix Discord.js v14 (undici) IPv6 hanging
+const { Agent, setGlobalDispatcher } = require('undici');
+setGlobalDispatcher(new Agent({ connect: { family: 4 } }));
+
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder } = require('discord.js');
 const { Shoukaku, Connectors } = require('shoukaku');
 const { QueueManager, buildNowPlayingButtons } = require('./utils/queue');
