@@ -372,12 +372,24 @@ client.once(Events.ClientReady, (c) => {
 // ── Global Error Handling ────────────────────────────────
 process.on('unhandledRejection', (reason, promise) => {
     console.error('  ⚠️  [Unhandled Rejection]', promise, 'reason:', reason);
+    process.exit(1); // Force exit so Render restarts it and logs the error
 });
 process.on('uncaughtException', (err) => {
     console.error('  ⚠️  [Uncaught Exception]', err);
+    process.exit(1); // Force exit so Render restarts it and logs the error
 });
 
 // Start the Bot
-client.login(process.env.DISCORD_TOKEN);
+if (!process.env.DISCORD_TOKEN) {
+    console.error('\n❌ FATAL ERROR: DISCORD_TOKEN environment variable is missing!');
+    console.error('Please check your Render dashboard -> Environment tab.\n');
+    process.exit(1);
+}
+
+console.log(`  🔑 Token found (length: ${process.env.DISCORD_TOKEN.length})`);
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+    console.error('\n❌ FATAL ERROR: Failed to login to Discord:', err.message);
+    process.exit(1);
+});
 
 module.exports = { client };
