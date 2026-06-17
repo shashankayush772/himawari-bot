@@ -1,5 +1,5 @@
 # ── Simple Node.js image (Lavalink is external, no Java needed) ──
-FROM node:20-slim
+FROM node:18-slim
 
 WORKDIR /app
 
