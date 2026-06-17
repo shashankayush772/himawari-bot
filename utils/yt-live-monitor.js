@@ -29,34 +29,40 @@ function saveData(data) {
 
 // ── Extract Channel ID from URL ────────────────────────────
 async function resolveChannelId(input) {
-    // Direct channel ID
-    if (/^UC[\w-]{22}$/.test(input)) return { id: input, name: null };
-
-    // URL with /channel/UCxxxxxx
-    const channelMatch = input.match(/youtube\.com\/channel\/(UC[\w-]{22})/);
-    if (channelMatch) return { id: channelMatch[1], name: null };
-
-    // URL with /@handle or /c/name or just @handle
-    let url = input;
-    if (input.startsWith('@')) url = `https://www.youtube.com/${input}`;
-    if (!url.startsWith('http')) url = `https://www.youtube.com/${input}`;
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    if (!apiKey) {
+        console.error('  ⚠️ [YT-LIVE] YOUTUBE_API_KEY is not set!');
+        return null;
+    }
 
     try {
-        const resp = await axios.get(url, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-            timeout: 10000,
-        });
-        const html = resp.data;
-
-        // Extract channel ID from page
-        const idMatch = html.match(/"externalId"\s*:\s*"(UC[\w-]{22})"/);
-        if (idMatch) {
-            // Extract channel name
-            const nameMatch = html.match(/"channelMetadataRenderer".*?"title"\s*:\s*"([^"]+)"/s);
-            return { id: idMatch[1], name: nameMatch?.[1] || null };
+        let query = input;
+        // If it's a direct URL, extract the handle or channel ID to search
+        if (input.includes('youtube.com/')) {
+            const match = input.match(/(?:youtube\.com\/(?:@|c\/|channel\/))([^/?]+)/);
+            if (match) query = match[1];
         }
-    } catch {}
 
+        // Use YouTube API Search endpoint to find the channel
+        const resp = await axios.get(`https://www.googleapis.com/youtube/v3/search`, {
+            params: {
+                part: 'snippet',
+                type: 'channel',
+                q: query,
+                key: apiKey
+            }
+        });
+
+        if (resp.data.items && resp.data.items.length > 0) {
+            const channel = resp.data.items[0];
+            return { 
+                id: channel.snippet.channelId, 
+                name: channel.snippet.channelTitle || channel.snippet.title 
+            };
+        }
+    } catch (err) {
+        console.error('  ⚠️ [YT-LIVE] API Channel Resolve Error:', err.response?.data || err.message);
+    }
     return null;
 }
 
@@ -94,25 +100,31 @@ async function fetchRSS(channelId) {
 
 // ── Check if a video is currently LIVE ─────────────────────
 async function checkIfLive(videoId) {
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    if (!apiKey) return { isLiveNow: false, isUpcoming: false, viewers: null };
+
     try {
-        const resp = await axios.get(`https://www.youtube.com/watch?v=${videoId}`, {
-            timeout: 10000,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        const resp = await axios.get(`https://www.googleapis.com/youtube/v3/videos`, {
+            params: {
+                part: 'snippet,liveStreamingDetails',
+                id: videoId,
+                key: apiKey
+            }
         });
-        const html = resp.data;
 
-        // Check for live indicators in page source
-        const isLive = html.includes('"isLive":true') || html.includes('"isLiveContent":true');
-        const isUpcoming = html.includes('"isUpcoming":true') || html.includes('"liveBroadcastDetails"');
-        const isLiveNow = isLive && !html.includes('"isUpcoming":true');
-
-        // Get viewer count if live
-        const viewerMatch = html.match(/"viewCount"\s*:\s*"(\d+)"/);
-        const viewers = viewerMatch ? parseInt(viewerMatch[1]) : null;
-
-        return { isLiveNow, isUpcoming: isUpcoming && !isLiveNow, viewers };
+        if (resp.data.items && resp.data.items.length > 0) {
+            const video = resp.data.items[0];
+            const isLive = video.snippet.liveBroadcastContent === 'live';
+            const isUpcoming = video.snippet.liveBroadcastContent === 'upcoming';
+            const viewers = video.liveStreamingDetails?.concurrentViewers 
+                ? parseInt(video.liveStreamingDetails.concurrentViewers) 
+                : null;
+                
+            return { isLiveNow: isLive, isUpcoming, viewers };
+        }
+        return { isLiveNow: false, isUpcoming: false, viewers: null };
     } catch (err) {
-        console.error(`  ⚠️ [YT-LIVE] Live check failed for ${videoId}:`, err.message);
+        console.error(`  ⚠️ [YT-LIVE] API Live check failed for ${videoId}:`, err.response?.data || err.message);
         return { isLiveNow: false, isUpcoming: false, viewers: null };
     }
 }
