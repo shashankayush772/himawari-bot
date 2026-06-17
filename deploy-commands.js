@@ -2,6 +2,20 @@ require('dotenv').config();
 const dns = require('node:dns');
 dns.setDefaultResultOrder('ipv4first'); // Fix IPv6 hanging
 
+console.log('\n  🔍 [NETWORK TEST] Testing direct connection to Discord API from deploy script...');
+fetch('https://discord.com/api/v10/applications/@me', {
+    headers: { 'Authorization': `Bot ${process.env.DISCORD_TOKEN}` }
+}).then(async res => {
+    console.log(`  ✅ [NETWORK TEST] Connected! Status: ${res.status} ${res.statusText}`);
+    if (!res.ok) {
+        console.error(`  ❌ [NETWORK TEST] Discord rejected the connection. Response:`, await res.text());
+        process.exit(1);
+    }
+}).catch(err => {
+    console.error(`  ❌ [NETWORK TEST] Connection completely failed/hung:`, err.message);
+    process.exit(1);
+});
+
 const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
