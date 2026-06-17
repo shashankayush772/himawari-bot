@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBu
 const { Shoukaku, Connectors } = require('shoukaku');
 const { QueueManager, buildNowPlayingButtons } = require('./utils/queue');
 const { MessageAdapter } = require('./utils/message-adapter');
+const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -361,6 +362,9 @@ client.once(Events.ClientReady, (c) => {
     console.log(`  📡 Servers: ${c.guilds.cache.size}`);
     console.log(`  📝 Commands: ${c.commands.size}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Start YouTube Live stream monitor
+    startYouTubeLiveMonitor(c);
 });
 
 // ── Global Error Handling ────────────────────────────────
@@ -373,3 +377,5 @@ process.on('uncaughtException', (err) => {
 
 // Start the Bot
 client.login(process.env.DISCORD_TOKEN);
+
+module.exports = { client };
