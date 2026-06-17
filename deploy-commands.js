@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dns = require('node:dns');
+dns.setDefaultResultOrder('ipv4first'); // Fix IPv6 hanging
 const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
