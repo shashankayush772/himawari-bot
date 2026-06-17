@@ -394,6 +394,42 @@ client.once(Events.ClientReady, (c) => {
 
     // Start YouTube Live stream monitor
     startYouTubeLiveMonitor(c);
+
+    // ── Rotating Status ──
+    const { ActivityType } = require('discord.js');
+    let statusIndex = 0;
+
+    setInterval(() => {
+        const serverCount = c.guilds.cache.size;
+        const memberCount = c.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0);
+        
+        // Build server names string (e.g. "Server1, Server2...")
+        const serverNames = Array.from(c.guilds.cache.values()).map(g => g.name);
+        let serversText = `${serverCount} servers`;
+        
+        if (serverCount > 0) {
+            // Pick up to 3 servers to show in the name so it doesn't exceed Discord's 128 character limit
+            const sampleNames = serverNames.slice(0, 3).join(', ');
+            serversText += ` (${sampleNames}${serverCount > 3 ? '...' : ''})`;
+        }
+        
+        // Truncate just in case server names are extremely long
+        if (serversText.length > 100) serversText = serversText.substring(0, 97) + '...';
+
+        const statuses = [
+            { name: serversText, type: ActivityType.Watching },
+            { name: `${memberCount} members`, type: ActivityType.Watching },
+            { name: 'Ayush', type: ActivityType.Listening }
+        ];
+
+        const currentStatus = statuses[statusIndex % statuses.length];
+        c.user.setActivity(currentStatus.name, { type: currentStatus.type });
+        
+        statusIndex++;
+    }, 15_000); // Rotates every 15 seconds
+
+    // Set initial status immediately
+    c.user.setActivity('Ayush', { type: ActivityType.Listening });
 });
 
 // ── Global Error Handling ────────────────────────────────
