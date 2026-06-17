@@ -10,8 +10,8 @@ RUN npm install --omit=dev
 # Copy application code
 COPY . .
 
-# Make the startup script executable
-RUN chmod +x render-start.sh
+# Fix Windows CRLF line endings in shell script & make executable
+RUN sed -i 's/\r$//' render-start.sh && chmod +x render-start.sh
 
 # Render requires a PORT to be exposed for health checks on Web Services
 EXPOSE 10000
