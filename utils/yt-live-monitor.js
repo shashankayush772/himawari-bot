@@ -135,25 +135,27 @@ async function sendLiveNotification(client, discordChannelId, entry, mentionRole
         const channel = await client.channels.fetch(discordChannelId);
         if (!channel) return;
 
-        const embed = new EmbedBuilder()
-            .setColor(0xFF0000)
-            .setAuthor({ name: `${entry.authorName}`, iconURL: `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.authorName)}&background=ff0000&color=fff` })
-            .setTitle(`🔴 ${entry.title}`)
-            .setURL(`https://www.youtube.com/watch?v=${entry.videoId}`)
-            .setDescription(`**${entry.authorName}** is now live on YouTube!`)
-            .setImage(entry.thumbnail)
-            .addFields(
-                { name: '🔗 Watch Now', value: `**[Click here to watch](https://www.youtube.com/watch?v=${entry.videoId})**` }
-            )
-            .setFooter({ text: 'YouTube Live Notification' })
-            .setTimestamp();
-
-        if (entry.viewers) {
-            embed.addFields({ name: '👀 Viewers', value: `${entry.viewers.toLocaleString()}`, inline: true });
+        // Discord @everyone role ID is the same as the guild ID. We must use literal "@everyone" to ping it.
+        let mention = '';
+        if (mentionRole) {
+            if (mentionRole === channel.guild.id) {
+                mention = '@everyone';
+            } else {
+                mention = `<@&${mentionRole}>`;
+            }
         }
 
-        const mention = mentionRole ? `<@&${mentionRole}> ` : '';
-        await channel.send({ content: `${mention}🔴 **LIVE NOW!**`, embeds: [embed] });
+        const cuteMessages = [
+            `OMG! 🎀 **${entry.authorName}** is live right now! Come watch! ✨\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
+            `Popcorn time! 🍿 **${entry.authorName}** just started streaming! 💖\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
+            `Hurry up! 🏃‍♀️ **${entry.authorName}** is LIVE! Don't miss it! 🎮\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
+            `A wild livestream appeared! 🌟 Catch **${entry.authorName}** live right now! 🎉\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
+            `Grab your snacks! 🍪 **${entry.authorName}** is officially LIVE! 🎈\nhttps://www.youtube.com/watch?v=${entry.videoId}`
+        ];
+        
+        const randomMsg = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
+
+        await channel.send({ content: `${mention}\n${randomMsg}` });
         console.log(`  📺 [YT-LIVE] Sent live notification for "${entry.title}" by ${entry.authorName}`);
     } catch (err) {
         console.error(`  ⚠️ [YT-LIVE] Failed to send notification:`, err.message);
