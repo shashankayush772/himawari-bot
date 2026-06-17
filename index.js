@@ -33,6 +33,13 @@ client.on('debug', info => console.log(`  [DEBUG] ${info}`));
 client.on('warn', info => console.warn(`  [WARN] ${info}`));
 client.on('error', err => console.error(`  [ERROR]`, err));
 
+client.rest.on('rateLimited', (info) => {
+    console.warn(`  [RATE LIMIT] Discord rate limited the bot! Time to wait: ${info.timeToReset}ms. Global: ${info.global}`);
+});
+client.rest.on('invalidRequestWarning', (info) => {
+    console.warn(`  [INVALID REQUEST]`, info);
+});
+
 // ── Lavalink (Shoukaku) ────────────────────────────────────
 // External nodes only — Render blocks outbound UDP so local Lavalink can't send audio.
 // 8 nodes across different providers for maximum uptime.
