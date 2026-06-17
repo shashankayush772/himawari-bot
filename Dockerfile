@@ -1,5 +1,12 @@
-# ── Simple Node.js image (Lavalink is external, no Java needed) ──
-FROM node:18-slim
+# ── Use Ubuntu Jammy (same OS as yesterday when it worked) ──
+FROM ubuntu:22.04
+
+# Install Node.js 20 and required certificates
+RUN apt-get update && \
+    apt-get install -y curl ca-certificates && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
