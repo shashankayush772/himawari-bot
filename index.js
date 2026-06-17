@@ -23,6 +23,11 @@ const client = new Client({
     partials: ['Channel'],
 });
 
+// ── DEBUG LOGGING ──────────────────────────────────────────
+client.on('debug', info => console.log(`  [DEBUG] ${info}`));
+client.on('warn', info => console.warn(`  [WARN] ${info}`));
+client.on('error', err => console.error(`  [ERROR]`, err));
+
 // ── Lavalink (Shoukaku) ────────────────────────────────────
 // External nodes only — Render blocks outbound UDP so local Lavalink can't send audio.
 // 8 nodes across different providers for maximum uptime.
