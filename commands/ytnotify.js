@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const { loadData, saveData, resolveChannelId } = require('../utils/yt-live-monitor');
+const { loadDataAsync, saveDataAsync, resolveChannelId } = require('../utils/yt-live-monitor');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -55,7 +55,7 @@ module.exports = {
                 return interaction.editReply('❌ Could not find that YouTube channel. Please provide a valid URL like `https://www.youtube.com/@channelname` or a channel ID.');
             }
 
-            const data = loadData();
+            const data = await loadDataAsync();
             if (!data.guilds[interaction.guildId]) {
                 data.guilds[interaction.guildId] = { tracks: [] };
             }
@@ -83,7 +83,7 @@ module.exports = {
                 addedBy: interaction.user.id,
             });
 
-            saveData(data);
+            await saveDataAsync(data);
 
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
@@ -103,7 +103,7 @@ module.exports = {
 
         else if (sub === 'remove') {
             const ytInput = interaction.options.getString('youtube').toLowerCase();
-            const data = loadData();
+            const data = await loadDataAsync();
             const guildData = data.guilds[interaction.guildId];
 
             if (!guildData || !guildData.tracks || guildData.tracks.length === 0) {
@@ -122,7 +122,7 @@ module.exports = {
             }
 
             const removed = guildData.tracks.splice(index, 1)[0];
-            saveData(data);
+            await saveDataAsync(data);
 
             const embed = new EmbedBuilder()
                 .setColor(0xED4245)
@@ -133,7 +133,7 @@ module.exports = {
         }
 
         else if (sub === 'list') {
-            const data = loadData();
+            const data = await loadDataAsync();
             const guildData = data.guilds[interaction.guildId];
 
             if (!guildData || !guildData.tracks || guildData.tracks.length === 0) {
@@ -157,7 +157,7 @@ module.exports = {
 
         else if (sub === 'setmessage') {
             const customMsg = interaction.options.getString('message');
-            const data = loadData();
+            const data = await loadDataAsync();
 
             if (!data.guilds[interaction.guildId] || !data.guilds[interaction.guildId].tracks || data.guilds[interaction.guildId].tracks.length === 0) {
                 return interaction.reply({ content: '❌ No YouTube channels are being tracked in this server. Use `/ytnotify add` first.', ephemeral: true });
@@ -165,7 +165,7 @@ module.exports = {
 
             // Save custom message at the guild level
             data.guilds[interaction.guildId].customMessage = customMsg;
-            saveData(data);
+            await saveDataAsync(data);
 
             const embed = new EmbedBuilder()
                 .setColor(0x57F287)

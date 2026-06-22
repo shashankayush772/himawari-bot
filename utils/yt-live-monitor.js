@@ -1,30 +1,79 @@
 const axios = require('axios');
-const fs = require('node:fs');
-const path = require('node:path');
 const { EmbedBuilder } = require('discord.js');
+const { MongoClient } = require('mongodb');
 
-const DATA_FILE = path.join(__dirname, '..', 'data', 'ytnotify.json');
+// ── MongoDB Connection ─────────────────────────────────────
+let db = null;
+let collection = null;
+let cachedData = null;
+
+async function connectMongo() {
+    if (db) return; // Already connected
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        console.error('  ⚠️ [YT-LIVE] MONGODB_URI not set! Data will NOT persist across restarts.');
+        return;
+    }
+    try {
+        const client = new MongoClient(uri);
+        await client.connect();
+        db = client.db('himawari');
+        collection = db.collection('ytnotify');
+        console.log('  ✅ [YT-LIVE] Connected to MongoDB');
+    } catch (err) {
+        console.error('  ⚠️ [YT-LIVE] MongoDB connection failed:', err.message);
+    }
+}
 
 // ── Load / Save ────────────────────────────────────────────
-function loadData() {
-    try {
-        if (fs.existsSync(DATA_FILE)) {
-            return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+async function loadDataAsync() {
+    if (cachedData) return cachedData;
+    
+    await connectMongo();
+    if (collection) {
+        try {
+            const doc = await collection.findOne({ _id: 'ytnotify_data' });
+            if (doc) {
+                cachedData = { guilds: doc.guilds || {}, notified: doc.notified || [], pendingLives: doc.pendingLives || {} };
+                return cachedData;
+            }
+        } catch (err) {
+            console.error('  ⚠️ [YT-LIVE] Failed to load from MongoDB:', err.message);
         }
-    } catch (err) {
-        console.error('  ⚠️ [YT-LIVE] Failed to load data:', err.message);
     }
+    cachedData = { guilds: {}, notified: [], pendingLives: {} };
+    return cachedData;
+}
+
+async function saveDataAsync(data) {
+    cachedData = data;
+    
+    await connectMongo();
+    if (collection) {
+        try {
+            await collection.updateOne(
+                { _id: 'ytnotify_data' },
+                { $set: { guilds: data.guilds, notified: data.notified, pendingLives: data.pendingLives } },
+                { upsert: true }
+            );
+        } catch (err) {
+            console.error('  ⚠️ [YT-LIVE] Failed to save to MongoDB:', err.message);
+        }
+    }
+}
+
+// Synchronous wrappers for backward compatibility (used by ytnotify.js command)
+// These work because the data is cached in memory after first async load
+function loadData() {
+    if (cachedData) return cachedData;
+    // If not loaded yet, return empty (will be loaded async on first poll)
     return { guilds: {}, notified: [], pendingLives: {} };
 }
 
 function saveData(data) {
-    try {
-        const dir = path.dirname(DATA_FILE);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-    } catch (err) {
-        console.error('  ⚠️ [YT-LIVE] Failed to save data:', err.message);
-    }
+    cachedData = data;
+    // Fire-and-forget async save to MongoDB
+    saveDataAsync(data).catch(err => console.error('  ⚠️ [YT-LIVE] Background save failed:', err.message));
 }
 
 // ── Extract Channel ID from URL ────────────────────────────
@@ -185,7 +234,7 @@ async function sendLiveNotification(client, discordChannelId, entry, mentionRole
 
 // ── Main polling loop ──────────────────────────────────────
 async function pollYouTubeLive(client) {
-    const data = loadData();
+    const data = await loadDataAsync();
     let changed = false;
 
     // Keep notified list manageable (max 500 entries)
@@ -266,11 +315,13 @@ async function pollYouTubeLive(client) {
         } catch {}
     }
 
-    if (changed) saveData(data);
+    if (changed) await saveDataAsync(data);
 }
 
 // ── Start the monitor ──────────────────────────────────────
-function startYouTubeLiveMonitor(client) {
+async function startYouTubeLiveMonitor(client) {
+    // Pre-load data from MongoDB on startup
+    await loadDataAsync();
     console.log('  📺 [YT-LIVE] Monitor started (polling every 2 minutes)');
 
     // Initial poll after 30 seconds (let bot finish starting)
@@ -280,4 +331,4 @@ function startYouTubeLiveMonitor(client) {
     setInterval(() => pollYouTubeLive(client), 120_000);
 }
 
-module.exports = { loadData, saveData, resolveChannelId, startYouTubeLiveMonitor };
+module.exports = { loadData, saveData, loadDataAsync, saveDataAsync, resolveChannelId, startYouTubeLiveMonitor };
