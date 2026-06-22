@@ -30,6 +30,13 @@ module.exports = {
             sub.setName('list')
                 .setDescription('📋 List all tracked YouTube channels')
         )
+        .addSubcommand(sub =>
+            sub.setName('setmessage')
+                .setDescription('✏️ Set a custom notification message for this server')
+                .addStringOption(opt =>
+                    opt.setName('message').setDescription('Custom message (use {link} for the stream URL)').setRequired(true)
+                )
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
@@ -143,6 +150,31 @@ module.exports = {
                     ).join('\n\n')
                 )
                 .setFooter({ text: `${guildData.tracks.length}/10 slots used • Checks every 2 min` })
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed] });
+        }
+
+        else if (sub === 'setmessage') {
+            const customMsg = interaction.options.getString('message');
+            const data = loadData();
+
+            if (!data.guilds[interaction.guildId] || !data.guilds[interaction.guildId].tracks || data.guilds[interaction.guildId].tracks.length === 0) {
+                return interaction.reply({ content: '❌ No YouTube channels are being tracked in this server. Use `/ytnotify add` first.', ephemeral: true });
+            }
+
+            // Save custom message at the guild level
+            data.guilds[interaction.guildId].customMessage = customMsg;
+            saveData(data);
+
+            const embed = new EmbedBuilder()
+                .setColor(0x57F287)
+                .setTitle('✅ Custom Message Set!')
+                .setDescription(`Your live notification message has been updated.`)
+                .addFields(
+                    { name: '📝 Message Preview', value: customMsg.replace('{link}', '`https://youtube.com/watch?v=...`') }
+                )
+                .setFooter({ text: 'Use {link} in your message to include the stream URL' })
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed] });

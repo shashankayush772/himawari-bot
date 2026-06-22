@@ -137,10 +137,33 @@ async function checkIfLive(videoId) {
 }
 
 // ── Send notification embed ────────────────────────────────
-async function sendLiveNotification(client, discordChannelId, entry, mentionRole) {
+async function sendLiveNotification(client, discordChannelId, entry, mentionRole, customMessage) {
     try {
         const channel = await client.channels.fetch(discordChannelId);
         if (!channel) return;
+
+        const streamUrl = `https://www.youtube.com/watch?v=${entry.videoId}`;
+
+        // Build the message content
+        let messageText;
+        if (customMessage) {
+            // Use custom message — replace {link} with the actual URL
+            messageText = customMessage.replace(/\{link\}/gi, streamUrl);
+            // If user didn't include {link}, append it at the end
+            if (!messageText.includes(streamUrl)) {
+                messageText += `\n${streamUrl}`;
+            }
+        } else {
+            // Use random cute messages as default
+            const cuteMessages = [
+                `OMG! 🎀 **${entry.authorName}** is live right now! Come watch! ✨\n${streamUrl}`,
+                `Popcorn time! 🍿 **${entry.authorName}** just started streaming! 💖\n${streamUrl}`,
+                `Hurry up! 🏃‍♀️ **${entry.authorName}** is LIVE! Don't miss it! 🎮\n${streamUrl}`,
+                `A wild livestream appeared! 🌟 Catch **${entry.authorName}** live right now! 🎉\n${streamUrl}`,
+                `Grab your snacks! 🍪 **${entry.authorName}** is officially LIVE! 🎈\n${streamUrl}`
+            ];
+            messageText = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
+        }
 
         // Discord @everyone role ID is the same as the guild ID. We must use literal "@everyone" to ping it.
         let mention = '';
@@ -152,17 +175,8 @@ async function sendLiveNotification(client, discordChannelId, entry, mentionRole
             }
         }
 
-        const cuteMessages = [
-            `OMG! 🎀 **${entry.authorName}** is live right now! Come watch! ✨\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
-            `Popcorn time! 🍿 **${entry.authorName}** just started streaming! 💖\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
-            `Hurry up! 🏃‍♀️ **${entry.authorName}** is LIVE! Don't miss it! 🎮\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
-            `A wild livestream appeared! 🌟 Catch **${entry.authorName}** live right now! 🎉\nhttps://www.youtube.com/watch?v=${entry.videoId}`,
-            `Grab your snacks! 🍪 **${entry.authorName}** is officially LIVE! 🎈\nhttps://www.youtube.com/watch?v=${entry.videoId}`
-        ];
-        
-        const randomMsg = cuteMessages[Math.floor(Math.random() * cuteMessages.length)];
-
-        await channel.send({ content: `${mention}\n${randomMsg}` });
+        const finalContent = mention ? `${mention}\n${messageText}` : messageText;
+        await channel.send({ content: finalContent });
         console.log(`  📺 [YT-LIVE] Sent live notification for "${entry.title}" by ${entry.authorName}`);
     } catch (err) {
         console.error(`  ⚠️ [YT-LIVE] Failed to send notification:`, err.message);
@@ -200,7 +214,7 @@ async function pollYouTubeLive(client) {
 
                     if (isLiveNow) {
                         // It's live! Send notification
-                        await sendLiveNotification(client, track.discordChannelId, entry, track.mentionRole);
+                        await sendLiveNotification(client, track.discordChannelId, entry, track.mentionRole, guildConfig.customMessage);
                         data.notified.push(notifKey);
                         changed = true;
                     } else if (isUpcoming) {
@@ -240,7 +254,10 @@ async function pollYouTubeLive(client) {
         try {
             const { isLiveNow } = await checkIfLive(pending.videoId);
             if (isLiveNow) {
-                await sendLiveNotification(client, pending.discordChannelId, pending, pending.mentionRole);
+                // Find the guild config for this pending notification to get customMessage
+                const pendingGuildId = notifKey.split(':')[0];
+                const pendingGuildConfig = data.guilds[pendingGuildId];
+                await sendLiveNotification(client, pending.discordChannelId, pending, pending.mentionRole, pendingGuildConfig?.customMessage);
                 data.notified.push(notifKey);
                 delete data.pendingLives[notifKey];
                 changed = true;
