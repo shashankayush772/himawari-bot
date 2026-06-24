@@ -16,39 +16,48 @@ module.exports = {
             return interaction.reply({ content: '❌ I do not have permission to **Connect** or **Speak** in your voice channel! Please check the channel permissions.', ephemeral: true });
         }
 
-        // Get a connected node (state 2 = CONNECTED)
-        const connectedNodes = [...interaction.client.shoukaku.nodes.values()].filter(n => n.state === 2);
-        const node = connectedNodes[0] || interaction.client.shoukaku.getIdealNode?.();
-        if (!node) return interaction.reply({ content: '❌ All music servers are currently offline. They auto-reconnect every 2 minutes — please try again shortly!', ephemeral: true });
+        // Get all connected nodes sorted by player count (least loaded first)
+        const connectedNodes = [...interaction.client.shoukaku.nodes.values()]
+            .filter(n => n.state === 2)
+            .sort((a, b) => (a.players?.size || 0) - (b.players?.size || 0));
+        
+        if (connectedNodes.length === 0) {
+            return interaction.reply({ content: '❌ All music servers are currently offline. They auto-reconnect every 3 minutes — please try again shortly!', ephemeral: true });
+        }
 
         try {
             await interaction.deferReply();
         } catch {
-            // If deferReply fails (network timeout), the interaction is dead — bail out
             return;
         }
         const query = interaction.options.getString('query');
 
-        let result;
-        try {
-            if (/^https?:\/\//.test(query)) {
-                // Direct URL (YouTube, SoundCloud, etc.)
-                result = await node.rest.resolve(query);
-            } else {
-                // Try YouTube Music search first (best quality)
-                result = await node.rest.resolve(`ytmsearch:${query}`);
-                // Fallback to regular YouTube search
-                if (!result || result.loadType === 'empty') {
-                    result = await node.rest.resolve(`ytsearch:${query}`);
+        // Try each connected node until one successfully resolves the track
+        let result = null;
+        let usedNode = null;
+        for (const node of connectedNodes) {
+            try {
+                if (/^https?:\/\//.test(query)) {
+                    result = await node.rest.resolve(query);
+                } else {
+                    // Try YouTube Music search first (best quality)
+                    result = await node.rest.resolve(`ytmsearch:${query}`);
+                    if (!result || result.loadType === 'empty') {
+                        result = await node.rest.resolve(`ytsearch:${query}`);
+                    }
+                    // Fallback to SoundCloud
+                    if (!result || result.loadType === 'empty') {
+                        result = await node.rest.resolve(`scsearch:${query}`);
+                    }
                 }
-                // Fallback to SoundCloud
-                if (!result || result.loadType === 'empty') {
-                    result = await node.rest.resolve(`scsearch:${query}`);
+                if (result && result.loadType !== 'empty' && result.loadType !== 'error') {
+                    usedNode = node;
+                    break; // Found a result, stop trying other nodes
                 }
+            } catch (err) {
+                console.error(`  ⚠️ [PLAY] Node "${node.name}" failed to resolve, trying next...`, err.message);
+                continue; // Try the next node
             }
-        } catch (err) {
-            console.error(`  ❌ [DEBUG] resolve() threw:`, err.message);
-            return interaction.editReply('❌ Search failed. Lavalink error.');
         }
         if (!result || result.loadType === 'empty' || result.loadType === 'error') {
             return interaction.editReply('❌ No results found for that query.');

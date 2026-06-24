@@ -99,40 +99,53 @@ class QueueManager {
             if (!q || !q.current) return;
 
             const failedTrack = q.current;
-            const source = failedTrack.info?.sourceName || '';
             const title = failedTrack.info?.title || '';
 
-            // If a YouTube track fails, auto-retry with SoundCloud
-            if (source === 'youtube' && !q._retrying) {
+            // If not already retrying, try to find a working node
+            if (!q._retrying) {
                 q._retrying = true;
-                console.log(`  🔄 [DEBUG] YouTube failed, retrying "${title}" on SoundCloud...`);
+                console.log(`  🔄 [DEBUG] Track failed, attempting retry for "${title}"...`);
+                
                 try {
-                    const node = this.client.shoukaku.getIdealNode?.()
-                        || [...this.client.shoukaku.nodes.values()][0];
-                    if (node) {
-                        const scResult = await node.rest.resolve(`scsearch:${title}`);
-                        if (scResult && scResult.loadType === 'search' && scResult.data.length > 0) {
-                            const scTrack = scResult.data[0];
-                            q.current = scTrack;
-                            player.playTrack({ track: { encoded: scTrack.encoded } });
-                            try {
-                                const ch = await this.client.channels.fetch(q.textChannelId);
-                                ch.send(`🔄 YouTube stream failed — switched to SoundCloud: **${scTrack.info.title}**`);
-                            } catch {}
-                            q._retrying = false;
-                            return;
-                        }
+                    // Try SoundCloud as a fallback source
+                    const nodes = [...this.client.shoukaku.nodes.values()].filter(n => n.state === 2);
+                    for (const node of nodes) {
+                        try {
+                            const scResult = await node.rest.resolve(`scsearch:${title}`);
+                            if (scResult && scResult.loadType === 'search' && scResult.data.length > 0) {
+                                const scTrack = scResult.data[0];
+                                q.current = scTrack;
+                                player.playTrack({ track: { encoded: scTrack.encoded } });
+                                try {
+                                    const ch = await this.client.channels.fetch(q.textChannelId);
+                                    ch.send(`🔄 Original source failed — switched to: **${scTrack.info.title}** (${scTrack.info.sourceName})`);
+                                } catch {}
+                                q._retrying = false;
+                                return;
+                            }
+                        } catch { continue; }
                     }
                 } catch (err) {
-                    console.error(`  ❌ [DEBUG] SoundCloud retry failed:`, err.message);
+                    console.error(`  ❌ [DEBUG] All retry attempts failed:`, err.message);
                 }
                 q._retrying = false;
             }
 
-            try {
-                const ch = await this.client.channels.fetch(q.textChannelId);
-                ch.send(`⚠️ Track failed to play: ${data.message || 'Unknown error'}. Try \`/play\` with a SoundCloud or direct URL.`);
-            } catch {}
+            // If retry failed, skip to next track
+            if (q.tracks.length > 0) {
+                q.current = q.tracks.shift();
+                player.playTrack({ track: { encoded: q.current.encoded } });
+                this._sendNowPlaying(q);
+                try {
+                    const ch = await this.client.channels.fetch(q.textChannelId);
+                    ch.send(`⚠️ **${title}** failed to play — skipping to next track.`);
+                } catch {}
+            } else {
+                try {
+                    const ch = await this.client.channels.fetch(q.textChannelId);
+                    ch.send(`⚠️ **${title}** failed to play: ${data.message || 'Unknown error'}. Queue is empty.`);
+                } catch {}
+            }
         });
 
         player.on('end', async (data) => {
@@ -194,8 +207,18 @@ class QueueManager {
             if (!q) return;
             try {
                 const ch = await this.client.channels.fetch(q.textChannelId);
-                ch.send('⚠️ Track got stuck — skipping...');
+                ch.send('⚠️ Track got stuck — skipping to the next one...');
             } catch {}
+
+            // Actually skip the stuck track instead of just warning
+            if (q.tracks.length > 0) {
+                q.current = q.tracks.shift();
+                player.playTrack({ track: { encoded: q.current.encoded } });
+                this._sendNowPlaying(q);
+            } else {
+                q.current = null;
+                try { player.stopTrack(); } catch {}
+            }
         });
 
         player.on('closed', async (data) => {

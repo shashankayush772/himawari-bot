@@ -51,51 +51,69 @@ client.rest.on('invalidRequestWarning', (info) => {
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// External nodes only — Render blocks outbound UDP so local Lavalink can't send audio.
-// 8 nodes across different providers for maximum uptime.
+// Only verified SSL nodes from the official lavalink-list directory.
+// Non-SSL nodes (G3V, NexCloud, VexaNode, Kasawa) removed — all dead/unstable.
 const lavalinkNodes = [
-    // SSL nodes
-    { name: 'Jirayu-SSL',     url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
-    { name: 'Trinium-SSL',    url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
     { name: 'Serenetia-SSL',  url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
+    { name: 'Jirayu-SSL',     url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
     { name: 'MilloHost-SSL',  url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
-    // Non-SSL nodes (more providers = more chances one is up)
-    { name: 'G3V',            url: 'lava.g3v.co.uk:9008',                auth: 'lavalinklol',                   secure: false },
-    { name: 'NexCloud',       url: 'n3.nexcloud.in:2026',                auth: 'nexcloud',                      secure: false },
-    { name: 'VexaNode',       url: 'omega.vexanode.cloud:2031',          auth: 'https://discord.vexanode.cloud', secure: false },
-    { name: 'Kasawa',         url: 'lava.kasawa.pro:2333',               auth: 'youshallnotpass',               secure: false },
+    { name: 'Trinium-SSL',    url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
 ];
 
 console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
 
 client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
     moveOnDisconnect: true,
-    reconnectTries: 10,
-    reconnectInterval: 5000,
+    reconnectTries: 3,         // Reduced from 10 — prevents reconnect spam
+    reconnectInterval: 10000,  // 10 seconds between retries (was 5s)
 });
 
-client.shoukaku.on('ready', (name) => console.log(`  🎵 Lavalink node "${name}" connected`));
-client.shoukaku.on('error', (name, error) => console.error(`  ❌ Lavalink "${name}" error:`, error.message));
-client.shoukaku.on('close', (name, code, reason) => console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`));
+// Track which nodes are being reconnected to prevent duplicate adds
+const reconnectingNodes = new Set();
+
+client.shoukaku.on('ready', (name) => {
+    reconnectingNodes.delete(name);
+    console.log(`  🎵 Lavalink node "${name}" connected`);
+});
+client.shoukaku.on('error', (name, error) => {
+    console.error(`  ❌ Lavalink "${name}" error: ${error.message}`);
+});
+client.shoukaku.on('close', (name, code, reason) => {
+    // Only log once per close, not every reconnect attempt
+    if (!reconnectingNodes.has(name)) {
+        console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`);
+    }
+});
 client.shoukaku.on('disconnect', (name, players, moved) => {
-    console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players affected: ${players.size}. Moved: ${moved}`);
+    console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players: ${players.size}. Moved: ${moved}`);
 });
 
-// ── Auto-reconnect dead nodes every 2 minutes ──
+// ── Smart auto-reconnect every 3 minutes ──
+// Properly removes dead nodes before re-adding to prevent reconnect storms
 setInterval(() => {
-    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length; // 2 = CONNECTED
+    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length;
     if (connectedCount < lavalinkNodes.length) {
-        console.log(`  🔄 [AUTO-RECONNECT] ${connectedCount}/${lavalinkNodes.length} nodes connected. Retrying dead nodes...`);
+        console.log(`  🔄 [RECONNECT] ${connectedCount}/${lavalinkNodes.length} nodes online. Retrying dead nodes...`);
         for (const nodeConfig of lavalinkNodes) {
             const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
-            if (!existingNode || existingNode.state !== 2) {
-                try {
-                    client.shoukaku.addNode(nodeConfig);
-                } catch {}
+            if (existingNode && existingNode.state === 2) continue; // Already connected, skip
+
+            // Skip if we're already trying to reconnect this node
+            if (reconnectingNodes.has(nodeConfig.name)) continue;
+            reconnectingNodes.add(nodeConfig.name);
+
+            try {
+                // IMPORTANT: Remove the broken node first to prevent duplicate connections
+                if (existingNode) {
+                    client.shoukaku.removeNode(nodeConfig.name);
+                }
+                client.shoukaku.addNode(nodeConfig);
+            } catch (err) {
+                reconnectingNodes.delete(nodeConfig.name);
             }
         }
     }
-}, 120_000);
+}, 180_000); // 3 minutes (was 2 min)
 
 client.queue = new QueueManager(client);
 
