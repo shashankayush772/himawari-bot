@@ -52,7 +52,6 @@ client.rest.on('invalidRequestWarning', (info) => {
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
 // Only verified SSL nodes from the official lavalink-list directory.
-// Non-SSL nodes (G3V, NexCloud, VexaNode, Kasawa) removed — all dead/unstable.
 const lavalinkNodes = [
     { name: 'Serenetia-SSL',  url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
     { name: 'Jirayu-SSL',     url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
@@ -64,56 +63,51 @@ console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, laval
 
 client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
     moveOnDisconnect: true,
-    reconnectTries: 3,         // Reduced from 10 — prevents reconnect spam
-    reconnectInterval: 10000,  // 10 seconds between retries (was 5s)
+    reconnectTries: 10,        // Give nodes plenty of chances to connect
+    reconnectInterval: 8000,   // 8 seconds between retries
 });
 
-// Track which nodes are being reconnected to prevent duplicate adds
-const reconnectingNodes = new Set();
-
 client.shoukaku.on('ready', (name) => {
-    reconnectingNodes.delete(name);
     console.log(`  🎵 Lavalink node "${name}" connected`);
 });
 client.shoukaku.on('error', (name, error) => {
     console.error(`  ❌ Lavalink "${name}" error: ${error.message}`);
 });
 client.shoukaku.on('close', (name, code, reason) => {
-    // Only log once per close, not every reconnect attempt
-    if (!reconnectingNodes.has(name)) {
-        console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`);
-    }
+    console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`);
 });
 client.shoukaku.on('disconnect', (name, players, moved) => {
     console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players: ${players.size}. Moved: ${moved}`);
 });
 
-// ── Smart auto-reconnect every 3 minutes ──
-// Properly removes dead nodes before re-adding to prevent reconnect storms
+// ── Auto-reconnect dead nodes every 60 seconds ──
+// If a node is dead (not state 2), remove it and re-add it
 setInterval(() => {
-    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length;
+    const allNodes = [...client.shoukaku.nodes.entries()];
+    const connectedCount = allNodes.filter(([, n]) => n.state === 2).length;
+    
     if (connectedCount < lavalinkNodes.length) {
-        console.log(`  🔄 [RECONNECT] ${connectedCount}/${lavalinkNodes.length} nodes online. Retrying dead nodes...`);
+        console.log(`  🔄 [RECONNECT] ${connectedCount}/${lavalinkNodes.length} nodes online. Retrying...`);
+        
         for (const nodeConfig of lavalinkNodes) {
             const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
-            if (existingNode && existingNode.state === 2) continue; // Already connected, skip
-
-            // Skip if we're already trying to reconnect this node
-            if (reconnectingNodes.has(nodeConfig.name)) continue;
-            reconnectingNodes.add(nodeConfig.name);
-
+            
+            // Skip if already connected
+            if (existingNode && existingNode.state === 2) continue;
+            
             try {
-                // IMPORTANT: Remove the broken node first to prevent duplicate connections
+                // Remove broken node if it exists, then re-add
                 if (existingNode) {
-                    client.shoukaku.removeNode(nodeConfig.name);
+                    try { client.shoukaku.removeNode(nodeConfig.name); } catch {}
                 }
                 client.shoukaku.addNode(nodeConfig);
+                console.log(`  🔄 [RECONNECT] Re-added node "${nodeConfig.name}"`);
             } catch (err) {
-                reconnectingNodes.delete(nodeConfig.name);
+                console.error(`  ❌ [RECONNECT] Failed to re-add "${nodeConfig.name}":`, err.message);
             }
         }
     }
-}, 180_000); // 3 minutes (was 2 min)
+}, 60_000); // Every 60 seconds
 
 client.queue = new QueueManager(client);
 
