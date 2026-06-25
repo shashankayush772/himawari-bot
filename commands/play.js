@@ -22,7 +22,7 @@ module.exports = {
             .sort((a, b) => (a.players?.size || 0) - (b.players?.size || 0));
         
         if (connectedNodes.length === 0) {
-            return interaction.reply({ content: '❌ All music servers are currently offline. They auto-reconnect every 3 minutes — please try again shortly!', ephemeral: true });
+            return interaction.reply({ content: '❌ All music servers are currently offline. They auto-reconnect every minute — please try again shortly!', ephemeral: true });
         }
 
         try {

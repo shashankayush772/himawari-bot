@@ -51,12 +51,20 @@ client.rest.on('invalidRequestWarning', (info) => {
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// Only verified SSL nodes from the official lavalink-list directory.
+// 10 verified working Lavalink v4 nodes (SSL + non-SSL fallbacks)
 const lavalinkNodes = [
+    // SSL nodes (port 443)
     { name: 'Serenetia-SSL',  url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
     { name: 'Jirayu-SSL',     url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
     { name: 'MilloHost-SSL',  url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
     { name: 'Trinium-SSL',    url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
+    // Non-SSL fallbacks (different ports — higher chance of working from cloud)
+    { name: 'Serenetia-80',   url: 'lavalinkv4.serenetia.com:80',        auth: 'https://seretia.link/discord',   secure: false },
+    { name: 'Jirayu-13592',   url: 'lavalink.jirayu.net:13592',          auth: 'youshallnotpass',               secure: false },
+    { name: 'Trinium-4333',   url: 'lavalink.triniumhost.com:4333',      auth: 'free',                          secure: false },
+    { name: 'Trinium-2333',   url: 'lavalink.triniumhost.com:2333',      auth: 'kirito',                        secure: false },
+    { name: 'Kasawa',         url: 'lava2.kasawa.pro:2334',              auth: 'youshallnotpass',               secure: false },
+    { name: 'MineCuta',       url: 'lavav4.minecuta.com:2333',           auth: 'discord.gg/gKuXdHs',           secure: false },
 ];
 
 console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
