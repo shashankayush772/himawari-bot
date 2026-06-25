@@ -51,16 +51,11 @@ client.rest.on('invalidRequestWarning', (info) => {
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// 10 verified working Lavalink v4 nodes (SSL + non-SSL fallbacks)
+// Only nodes confirmed working from Render (checked live logs 2026-06-25)
+// Removed: Serenetia (429 rate-limit), Trinium-SSL (403), Jirayu-SSL (instant disconnect)
 const lavalinkNodes = [
-    // SSL nodes (port 443)
-    { name: 'Serenetia-SSL',  url: 'lavalinkv4.serenetia.com:443',       auth: 'https://seretia.link/discord',   secure: true },
-    { name: 'Jirayu-SSL',     url: 'lavalink.jirayu.net:443',            auth: 'youshallnotpass',               secure: true },
     { name: 'MilloHost-SSL',  url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
-    { name: 'Trinium-SSL',    url: 'lavalink-v4.triniumhost.com:443',    auth: 'free',                          secure: true },
-    // Non-SSL fallbacks (different ports — higher chance of working from cloud)
-    { name: 'Serenetia-80',   url: 'lavalinkv4.serenetia.com:80',        auth: 'https://seretia.link/discord',   secure: false },
-    { name: 'Jirayu-13592',   url: 'lavalink.jirayu.net:13592',          auth: 'youshallnotpass',               secure: false },
+    { name: 'Jirayu',         url: 'lavalink.jirayu.net:13592',          auth: 'youshallnotpass',               secure: false },
     { name: 'Trinium-4333',   url: 'lavalink.triniumhost.com:4333',      auth: 'free',                          secure: false },
     { name: 'Trinium-2333',   url: 'lavalink.triniumhost.com:2333',      auth: 'kirito',                        secure: false },
     { name: 'Kasawa',         url: 'lava2.kasawa.pro:2334',              auth: 'youshallnotpass',               secure: false },
@@ -71,8 +66,8 @@ console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, laval
 
 client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
     moveOnDisconnect: true,
-    reconnectTries: 10,        // Give nodes plenty of chances to connect
-    reconnectInterval: 8000,   // 8 seconds between retries
+    reconnectTries: 5,
+    reconnectInterval: 10000,
 });
 
 client.shoukaku.on('ready', (name) => {
@@ -88,34 +83,35 @@ client.shoukaku.on('disconnect', (name, players, moved) => {
     console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players: ${players.size}. Moved: ${moved}`);
 });
 
-// ── Auto-reconnect dead nodes every 60 seconds ──
-// If a node is dead (not state 2), remove it and re-add it
+// ── Auto-reconnect dead nodes every 90 seconds ──
+// Wait 2 minutes before first run to let Shoukaku's own reconnect logic finish
+let reconnectEnabled = false;
+setTimeout(() => { reconnectEnabled = true; }, 120_000);
+
 setInterval(() => {
-    const allNodes = [...client.shoukaku.nodes.entries()];
-    const connectedCount = allNodes.filter(([, n]) => n.state === 2).length;
+    if (!reconnectEnabled) return;
+
+    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length;
     
-    if (connectedCount < lavalinkNodes.length) {
-        console.log(`  🔄 [RECONNECT] ${connectedCount}/${lavalinkNodes.length} nodes online. Retrying...`);
+    // Only reconnect if we have ZERO working nodes (don't touch nodes that are working)
+    if (connectedCount === 0) {
+        console.log(`  🔄 [RECONNECT] 0/${lavalinkNodes.length} nodes online! Emergency reconnect...`);
         
         for (const nodeConfig of lavalinkNodes) {
             const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
             
-            // Skip if already connected
-            if (existingNode && existingNode.state === 2) continue;
+            // Skip if connected (state 2) or currently connecting (state 1)
+            if (existingNode && (existingNode.state === 2 || existingNode.state === 1)) continue;
             
             try {
-                // Remove broken node if it exists, then re-add
                 if (existingNode) {
                     try { client.shoukaku.removeNode(nodeConfig.name); } catch {}
                 }
                 client.shoukaku.addNode(nodeConfig);
-                console.log(`  🔄 [RECONNECT] Re-added node "${nodeConfig.name}"`);
-            } catch (err) {
-                console.error(`  ❌ [RECONNECT] Failed to re-add "${nodeConfig.name}":`, err.message);
-            }
+            } catch {}
         }
     }
-}, 60_000); // Every 60 seconds
+}, 90_000);
 
 client.queue = new QueueManager(client);
 
