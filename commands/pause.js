@@ -6,14 +6,14 @@ module.exports = {
         .setDescription('⏸️ Pause the current track'),
 
     async execute(interaction) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue || !queue.current) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
 
-        queue.player.setPaused(true);
+        queue.node.setPaused(true);
 
         const embed = new EmbedBuilder()
             .setColor(0xFEE75C)
-            .setDescription(`⏸️ Paused **${queue.current.info.title}**`)
+            .setDescription(`⏸️ Paused **${queue.currentTrack.title}**`)
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });

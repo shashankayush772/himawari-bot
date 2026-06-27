@@ -9,12 +9,11 @@ module.exports = {
         ),
 
     async execute(interaction) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue || !queue.current) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
 
         const level = interaction.options.getInteger('level');
-        queue.volume = level;
-        queue.player.setGlobalVolume(level);
+        queue.node.setVolume(level);
 
         const bar = '█'.repeat(Math.round(level / 10)) + '░'.repeat(Math.max(20 - Math.round(level / 10), 0));
 

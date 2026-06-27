@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { QueryType } = require('discord-player');
 const { formatDuration, buildNowPlayingButtons } = require('../utils/queue');
 
 module.exports = {
@@ -16,157 +17,98 @@ module.exports = {
             return interaction.reply({ content: '❌ I do not have permission to **Connect** or **Speak** in your voice channel! Please check the channel permissions.', ephemeral: true });
         }
 
-        // Get all connected nodes sorted by player count (least loaded first)
-        let connectedNodes = [...interaction.client.shoukaku.nodes.values()]
-            .filter(n => n.state === 2)
-            .sort((a, b) => (a.players?.size || 0) - (b.players?.size || 0));
-        
-        // If no nodes are connected, try emergency reconnect and wait
-        if (connectedNodes.length === 0) {
+        try {
             await interaction.deferReply();
-            interaction.editReply('🔄 Music servers are waking up... connecting now (this takes a few seconds)');
-            
-            // Trigger emergency reconnect
-            interaction.client.reconnectLavalink();
-            
-            // Wait up to 8 seconds for at least one node to connect
-            for (let i = 0; i < 16; i++) {
-                await new Promise(r => setTimeout(r, 500));
-                connectedNodes = [...interaction.client.shoukaku.nodes.values()]
-                    .filter(n => n.state === 2)
-                    .sort((a, b) => (a.players?.size || 0) - (b.players?.size || 0));
-                if (connectedNodes.length > 0) break;
-            }
-            
-            if (connectedNodes.length === 0) {
-                return interaction.editReply('❌ Could not connect to any music server. All 6 servers may be down — try again in a minute.');
-            }
-        }
+        } catch { return; }
 
-        if (!interaction.deferred) {
-            try {
-                await interaction.deferReply();
-            } catch {
-                return;
-            }
-        }
         const query = interaction.options.getString('query');
+        const player = interaction.client.player;
 
-        // Try each connected node until one successfully resolves the track
-        let result = null;
-        let usedNode = null;
-        for (const node of connectedNodes) {
-            try {
-                if (/^https?:\/\//.test(query)) {
-                    result = await node.rest.resolve(query);
-                } else {
-                    // Try YouTube Music search first (best quality)
-                    result = await node.rest.resolve(`ytmsearch:${query}`);
-                    if (!result || result.loadType === 'empty') {
-                        result = await node.rest.resolve(`ytsearch:${query}`);
-                    }
-                    // Fallback to SoundCloud
-                    if (!result || result.loadType === 'empty') {
-                        result = await node.rest.resolve(`scsearch:${query}`);
-                    }
-                }
-                if (result && result.loadType !== 'empty' && result.loadType !== 'error') {
-                    usedNode = node;
-                    break; // Found a result, stop trying other nodes
-                }
-            } catch (err) {
-                console.error(`  ⚠️ [PLAY] Node "${node.name}" failed to resolve, trying next...`, err.message);
-                continue; // Try the next node
-            }
+        // Search for the track
+        let result;
+        try {
+            result = await player.search(query, {
+                requestedBy: interaction.user,
+            });
+        } catch (err) {
+            console.error('  ❌ [PLAY] Search error:', err.message);
+            return interaction.editReply('❌ Failed to search for that song. Please try again.');
         }
-        if (!result || result.loadType === 'empty' || result.loadType === 'error') {
+
+        if (!result || !result.hasTracks()) {
             return interaction.editReply('❌ No results found for that query.');
         }
 
-        let tracks = [];
-        let playlistName = null;
+        try {
+            // Get existing queue metadata (preserve 24/7 mode)
+            const existingQueue = player.queues.get(interaction.guildId);
+            const is247 = existingQueue?.metadata?.is247 || false;
 
-        if (result.loadType === 'playlist') {
-            tracks = result.data.tracks;
-            playlistName = result.data.info.name;
-        } else if (result.loadType === 'search') {
-            tracks = [result.data[0]];
-        } else if (result.loadType === 'track') {
-            tracks = [result.data];
-        }
+            const { track, queue } = await player.play(voice, result, {
+                nodeOptions: {
+                    metadata: {
+                        channel: interaction.channel,
+                        is247: is247,
+                    },
+                    volume: 80,
+                    leaveOnEmpty: !is247,
+                    leaveOnEmptyCooldown: 300_000,
+                    leaveOnEnd: !is247,
+                    leaveOnEndCooldown: 300_000,
+                    selfDeaf: true,
+                },
+            });
 
-        if (!tracks.length) return interaction.editReply('❌ No results found.');
+            if (result.playlist) {
+                const embed = new EmbedBuilder()
+                    .setColor(0xFEE75C)
+                    .setAuthor({ name: '📋 Playlist Added to Queue' })
+                    .setTitle(result.playlist.title)
+                    .setURL(result.playlist.url || null)
+                    .addFields(
+                        { name: '🎵 Tracks', value: `${result.tracks.length} tracks`, inline: true },
+                        { name: '📊 Queue Size', value: `${queue.tracks.size} total`, inline: true }
+                    )
+                    .setThumbnail(result.playlist.thumbnail?.url || null)
+                    .setTimestamp();
 
-        let queue = interaction.client.queue.get(interaction.guildId);
+                await interaction.editReply({ embeds: [embed] });
+            } else if (queue.currentTrack === track) {
+                // This track is now playing
+                const embed = new EmbedBuilder()
+                    .setColor(0x57F287)
+                    .setAuthor({ name: '🎵 Now Playing' })
+                    .setTitle(track.title)
+                    .setURL(track.url)
+                    .addFields(
+                        { name: '👤 Artist', value: track.author || 'Unknown', inline: true },
+                        { name: '⏱️ Duration', value: track.duration || formatDuration(track.durationMS), inline: true },
+                        { name: '📋 Queue', value: `${queue.tracks.size} track(s)`, inline: true }
+                    )
+                    .setThumbnail(track.thumbnail || null)
+                    .setTimestamp();
 
-        if (!queue) {
-            try {
-                const player = await interaction.client.shoukaku.joinVoiceChannel({
-                    guildId: interaction.guildId,
-                    channelId: voice.id,
-                    shardId: interaction.guild.shardId,
-                    deaf: true,
-                });
-                player.setGlobalVolume(100);
+                const buttons = buildNowPlayingButtons(queue);
+                await interaction.editReply({ embeds: [embed], components: buttons });
+            } else {
+                // Added to queue
+                const embed = new EmbedBuilder()
+                    .setColor(0xFEE75C)
+                    .setAuthor({ name: '📋 Added to Queue' })
+                    .setTitle(track.title)
+                    .setURL(track.url)
+                    .addFields(
+                        { name: '⏱️ Duration', value: track.duration || formatDuration(track.durationMS), inline: true },
+                        { name: '📊 Position', value: `#${queue.tracks.size}`, inline: true }
+                    )
+                    .setThumbnail(track.thumbnail || null)
+                    .setTimestamp();
 
-                queue = interaction.client.queue.create(interaction.guildId, {
-                    textChannelId: interaction.channelId,
-                    voiceChannelId: voice.id,
-                    player,
-                });
-            } catch (joinErr) {
-                console.error('  ❌ [DEBUG] joinVoiceChannel failed:', joinErr.message);
-                return interaction.editReply('❌ Lavalink is reconnecting. Please try again in a few seconds.');
+                await interaction.editReply({ embeds: [embed] });
             }
-        }
-
-        for (const t of tracks) queue.tracks.push(t);
-
-        if (!queue.current) {
-            queue.current = queue.tracks.shift();
-            queue.player.playTrack({ track: { encoded: queue.current.encoded } });
-
-            const embed = new EmbedBuilder()
-                .setColor(0x57F287)
-                .setAuthor({ name: '🎵 Now Playing' })
-                .setTitle(queue.current.info.title)
-                .setURL(queue.current.info.uri)
-                .addFields(
-                    { name: '👤 Artist', value: queue.current.info.author || 'Unknown', inline: true },
-                    { name: '⏱️ Duration', value: formatDuration(queue.current.info.length), inline: true },
-                    { name: '📋 Queue', value: `${queue.tracks.length} track(s)`, inline: true }
-                )
-                .setThumbnail(queue.current.info.artworkUrl || null)
-                .setTimestamp();
-
-            const buttons = buildNowPlayingButtons(queue);
-            const reply = await interaction.editReply({ embeds: [embed], components: buttons });
-            queue.nowPlayingMessage = reply;
-
-            // Set Voice Channel Status via REST API
-            try {
-                await interaction.client.rest.put(
-                    `/channels/${voice.id}/voice-status`,
-                    { body: { status: `🎵 ${queue.current.info.title}`.substring(0, 175) } }
-                );
-            } catch (err) {
-                console.error(`  ⚠️ [DEBUG] Failed to set VC status:`, err.message);
-            }
-        } else {
-            const t = tracks[0];
-            const embed = new EmbedBuilder()
-                .setColor(0xFEE75C)
-                .setAuthor({ name: '📋 Added to Queue' })
-                .setTitle(playlistName || t.info.title)
-                .setURL(!playlistName ? t.info.uri : null)
-                .addFields(
-                    { name: '⏱️ Duration', value: tracks.length > 1 ? `${tracks.length} tracks` : formatDuration(t.info.length), inline: true },
-                    { name: '📊 Position', value: `#${queue.tracks.length}`, inline: true }
-                )
-                .setThumbnail(t.info.artworkUrl || null)
-                .setTimestamp();
-
-            await interaction.editReply({ embeds: [embed] });
+        } catch (err) {
+            console.error('  ❌ [PLAY] Play error:', err.message, err.stack);
+            return interaction.editReply(`❌ Could not play that track: ${err.message}`);
         }
     },
 };

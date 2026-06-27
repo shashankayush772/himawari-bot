@@ -4,24 +4,24 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('loop')
         .setDescription('🔁 Set loop mode for playback')
-        .addStringOption(opt =>
+        .addIntegerOption(opt =>
             opt.setName('mode').setDescription('Loop mode').setRequired(true)
                 .addChoices(
-                    { name: '🚫 Off', value: 'off' },
-                    { name: '🔂 Track (repeat current)', value: 'track' },
-                    { name: '🔁 Queue (repeat all)', value: 'queue' }
+                    { name: '🚫 Off', value: 0 },
+                    { name: '🔂 Track (repeat current)', value: 1 },
+                    { name: '🔁 Queue (repeat all)', value: 2 }
                 )
         ),
 
     async execute(interaction) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
 
-        const mode = interaction.options.getString('mode');
-        queue.loop = mode;
+        const mode = interaction.options.getInteger('mode');
+        queue.setRepeatMode(mode);
 
-        const icons = { off: '🚫', track: '🔂', queue: '🔁' };
-        const labels = { off: 'Off', track: 'Looping Current Track', queue: 'Looping Entire Queue' };
+        const icons = { 0: '🚫', 1: '🔂', 2: '🔁' };
+        const labels = { 0: 'Off', 1: 'Looping Current Track', 2: 'Looping Entire Queue' };
 
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)

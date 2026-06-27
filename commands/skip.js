@@ -6,11 +6,11 @@ module.exports = {
         .setDescription('⏭️ Skip the current track'),
 
     async execute(interaction) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue || !queue.current) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
 
-        const skipped = queue.current.info.title;
-        queue.player.stopTrack(); // triggers 'end' event → plays next
+        const skipped = queue.currentTrack.title;
+        queue.node.skip();
 
         const embed = new EmbedBuilder()
             .setColor(0xE67E22)

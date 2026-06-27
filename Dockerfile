@@ -1,9 +1,9 @@
-# ── Use Ubuntu Jammy (same OS as yesterday when it worked) ──
+# ── Use Ubuntu Jammy ──
 FROM ubuntu:22.04
 
-# Install Node.js 20 and required certificates
+# Install Node.js 20, ffmpeg (for audio), and build tools (for native modules)
 RUN apt-get update && \
-    apt-get install -y curl ca-certificates && \
+    apt-get install -y curl ca-certificates ffmpeg python3 make g++ && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

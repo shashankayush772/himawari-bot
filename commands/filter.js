@@ -1,38 +1,14 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 const FILTERS = {
-    bassboost: {
-        label: 'Bass Boost', emoji: '🔊',
-        settings: { equalizer: [0.35, 0.30, 0.25, 0.15, 0.10, 0.05, 0, 0, 0, 0, 0, 0, 0, 0, 0].map((gain, band) => ({ band, gain })) },
-    },
-    nightcore: {
-        label: 'Nightcore', emoji: '🌙',
-        settings: { timescale: { speed: 1.25, pitch: 1.3, rate: 1.0 } },
-    },
-    vaporwave: {
-        label: 'Vaporwave', emoji: '🌊',
-        settings: { timescale: { speed: 0.85, pitch: 0.75, rate: 1.0 }, tremolo: { frequency: 14.0, depth: 0.25 } },
-    },
-    eightd: {
-        label: '8D Audio', emoji: '🎧',
-        settings: { rotation: { rotationHz: 0.2 } },
-    },
-    karaoke: {
-        label: 'Karaoke', emoji: '🎤',
-        settings: { karaoke: { level: 1.0, monoLevel: 1.0, filterBand: 220.0, filterWidth: 100.0 } },
-    },
-    tremolo: {
-        label: 'Tremolo', emoji: '〰️',
-        settings: { tremolo: { frequency: 4.0, depth: 0.75 } },
-    },
-    vibrato: {
-        label: 'Vibrato', emoji: '🎵',
-        settings: { vibrato: { frequency: 4.0, depth: 0.75 } },
-    },
-    lowpass: {
-        label: 'Low Pass', emoji: '🔇',
-        settings: { lowPass: { smoothing: 20.0 } },
-    },
+    bassboost: { label: 'Bass Boost', emoji: '🔊', id: 'bassboost' },
+    nightcore: { label: 'Nightcore', emoji: '🌙', id: 'nightcore' },
+    vaporwave: { label: 'Vaporwave', emoji: '🌊', id: 'vaporwave' },
+    eightd: { label: '8D Audio', emoji: '🎧', id: '8D' },
+    karaoke: { label: 'Karaoke', emoji: '🎤', id: 'karaoke' },
+    tremolo: { label: 'Tremolo', emoji: '〰️', id: 'tremolo' },
+    vibrato: { label: 'Vibrato', emoji: '🎵', id: 'vibrato' },
+    lowpass: { label: 'Low Pass', emoji: '🔇', id: 'lowpass' }, // NOTE: lowpass might not be built-in, but usually fallback exists or we can just ignore failure
 };
 
 function buildFilterEmbed(activeFilter) {
@@ -85,13 +61,22 @@ module.exports = {
         .setDescription('🎛️ Apply audio filters to the music'),
 
     async execute(interaction) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue || !queue.current) {
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) {
             return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
         }
 
-        const embed = buildFilterEmbed(queue.activeFilter || null);
-        const buttons = buildButtons(queue.activeFilter || null);
+        // Just pick the first enabled filter for display
+        const enabledFilters = queue.filters.ffmpeg.getFiltersEnabled();
+        let activeLabel = null;
+        if (enabledFilters.length > 0) {
+            const enabledId = enabledFilters[0];
+            const foundKey = Object.keys(FILTERS).find(k => FILTERS[k].id === enabledId);
+            if (foundKey) activeLabel = FILTERS[foundKey].label;
+        }
+
+        const embed = buildFilterEmbed(activeLabel);
+        const buttons = buildButtons(activeLabel);
 
         const reply = await interaction.reply({ embeds: [embed], components: buttons, fetchReply: true });
 
@@ -101,39 +86,56 @@ module.exports = {
         });
 
         collector.on('collect', async (btnInteraction) => {
-            const queue = interaction.client.queue.get(interaction.guildId);
-            if (!queue || !queue.current) {
+            const queue = interaction.client.player.queues.get(interaction.guildId);
+            if (!queue || !queue.currentTrack) {
                 return btnInteraction.update({ content: '❌ Nothing is playing anymore.', embeds: [], components: [] });
             }
 
             const filterId = btnInteraction.customId.replace('filter_', '');
+            
+            // Defers update since applying filters can take a moment (FFmpeg restarts)
+            await btnInteraction.deferUpdate();
 
             if (filterId === 'reset') {
-                await queue.player.setFilters({});
-                queue.activeFilter = null;
+                queue.filters.ffmpeg.setFilters(false); // disable all
             } else {
                 const filter = FILTERS[filterId];
                 if (!filter) return;
 
-                if (queue.activeFilter === filter.label) {
-                    // Toggle off if same filter
-                    await queue.player.setFilters({});
-                    queue.activeFilter = null;
-                } else {
-                    // Apply new filter
-                    await queue.player.setFilters(filter.settings);
-                    queue.activeFilter = filter.label;
+                // Toggle specifically this one, optionally clear others for singular mode
+                try {
+                    // Turn off all existing
+                    queue.filters.ffmpeg.setFilters(false);
+                    // Turn on the selected
+                    const isSame = activeLabel === filter.label;
+                    if (!isSame) {
+                        queue.filters.ffmpeg.toggle(filter.id);
+                    }
+                } catch (e) {
+                    console.error('Filter apply error:', e);
                 }
             }
 
-            const updatedEmbed = buildFilterEmbed(queue.activeFilter);
-            const updatedButtons = buildButtons(queue.activeFilter);
-            await btnInteraction.update({ embeds: [updatedEmbed], components: updatedButtons });
+            // Let it propagate for a moment
+            await new Promise(r => setTimeout(r, 100));
+
+            const curEnabled = queue.filters.ffmpeg.getFiltersEnabled();
+            let newLabel = null;
+            if (curEnabled.length > 0) {
+                const foundKey = Object.keys(FILTERS).find(k => FILTERS[k].id === curEnabled[0]);
+                if (foundKey) newLabel = FILTERS[foundKey].label;
+            }
+
+            activeLabel = newLabel;
+            const updatedEmbed = buildFilterEmbed(activeLabel);
+            const updatedButtons = buildButtons(activeLabel);
+            
+            await btnInteraction.editReply({ embeds: [updatedEmbed], components: updatedButtons });
         });
 
         collector.on('end', async () => {
             try {
-                const disabledButtons = buildButtons(queue?.activeFilter || null).map(row => {
+                const disabledButtons = buildButtons(activeLabel).map(row => {
                     row.components.forEach(btn => btn.setDisabled(true));
                     return row;
                 });

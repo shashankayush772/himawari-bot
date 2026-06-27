@@ -11,35 +11,41 @@ module.exports = {
             return interaction.reply({ content: '❌ Join a voice channel first!', ephemeral: true });
         }
 
-        let queue = interaction.client.queue.get(interaction.guildId);
+        let queue = interaction.client.player.queues.get(interaction.guildId);
 
         // If there's no queue but user is in a VC, create one by joining
         if (!queue) {
             try {
-                const player = await interaction.client.shoukaku.joinVoiceChannel({
-                    guildId: interaction.guildId,
-                    channelId: voice.id,
-                    shardId: interaction.guild.shardId,
-                    deaf: true,
+                queue = interaction.client.player.queues.create(interaction.guildId, {
+                    metadata: {
+                        channel: interaction.channel,
+                        is247: true,
+                    },
+                    volume: 80,
+                    leaveOnEmpty: false,
+                    leaveOnEnd: false,
+                    selfDeaf: true,
                 });
-                player.setGlobalVolume(100);
-
-                queue = interaction.client.queue.create(interaction.guildId, {
-                    textChannelId: interaction.channelId,
-                    voiceChannelId: voice.id,
-                    player,
-                });
+                await queue.connect(voice);
             } catch (err) {
                 console.error('247 join error:', err.message);
                 return interaction.reply({ content: '❌ Failed to join the voice channel.', ephemeral: true });
             }
         }
 
-        queue.is247 = !queue.is247;
+        // Toggle
+        const is247 = !queue.metadata?.is247;
+        queue.metadata = { ...queue.metadata, is247: is247 };
 
-        if (queue.is247) {
+        // Update queue settings dynamically
+        if (is247) {
+            // Can't directly update these properties easily after init in some versions, but we'll try options
+            queue.options.leaveOnEmpty = false;
+            queue.options.leaveOnEnd = false;
             await interaction.reply('♾️ **24/7 Mode Enabled!** The bot will stay in the voice channel permanently, even when the queue is empty.');
         } else {
+            queue.options.leaveOnEmpty = true;
+            queue.options.leaveOnEnd = true;
             await interaction.reply('🛑 **24/7 Mode Disabled!** The bot will auto-leave after 5 minutes of inactivity.');
         }
     },

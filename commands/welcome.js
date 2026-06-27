@@ -29,92 +29,77 @@ module.exports = {
         const voice = interaction.member?.voice?.channel;
         if (!voice) return interaction.reply({ content: '❌ Join a voice channel first!', ephemeral: true });
 
-        const node = interaction.client.shoukaku.getIdealNode?.()
-            || [...interaction.client.shoukaku.nodes.values()][0];
-        if (!node) return interaction.reply({ content: '❌ No Lavalink node available. Is Lavalink running?', ephemeral: true });
-
         try {
             await interaction.deferReply();
         } catch { return; }
 
-        // Resolve the welcome track
+        const player = interaction.client.player;
+
         let result;
         try {
-            result = await node.rest.resolve(WELCOME_URL);
+            result = await player.search(WELCOME_URL, {
+                requestedBy: interaction.user,
+            });
         } catch (err) {
-            console.error('  ❌ Welcome resolve error:', err.message);
-            return interaction.editReply('❌ Failed to load the welcome track.');
+            console.error('  ❌ Welcome search error:', err.message);
+            return interaction.editReply('❌ Failed to search for the welcome track.');
         }
 
-        if (!result || result.loadType === 'empty' || result.loadType === 'error') {
+        if (!result || !result.hasTracks()) {
             return interaction.editReply('❌ Could not load the welcome track.');
         }
 
-        const track = result.loadType === 'track' ? result.data
-            : result.data?.tracks?.[0] || result.data?.[0];
-
-        if (!track) return interaction.editReply('❌ No track found.');
-
-        // Join VC & create queue if needed
-        let queue = interaction.client.queue.get(interaction.guildId);
-
-        if (!queue) {
-            try {
-                const player = await interaction.client.shoukaku.joinVoiceChannel({
-                    guildId: interaction.guildId,
-                    channelId: voice.id,
-                    shardId: interaction.guild.shardId,
-                    deaf: true,
-                });
-                player.setGlobalVolume(100);
-
-                queue = interaction.client.queue.create(interaction.guildId, {
-                    textChannelId: interaction.channelId,
-                    voiceChannelId: voice.id,
-                    player,
-                });
-            } catch (joinErr) {
-                console.error('  ❌ Welcome join error:', joinErr.message);
-                return interaction.editReply('❌ Lavalink is reconnecting. Please try again in a few seconds.');
-            }
-        }
-
-        queue.tracks.push(track);
-
-        if (!queue.current) {
-            queue.current = queue.tracks.shift();
-            queue.player.playTrack({ track: { encoded: queue.current.encoded } });
-        }
-
-        // Pick a random welcome message
-        const welcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
-
-        // List members in the VC
-        const vcMembers = voice.members
-            .filter(m => !m.user.bot)
-            .map(m => `> 🎤 <@${m.id}>`)
-            .join('\n') || '> *Empty VC... awkward.*';
-
-        const embed = new EmbedBuilder()
-            .setColor(0xF1C40F)
-            .setTitle('🎉 WELCOME TO THE VC!')
-            .setDescription(`${welcomeMsg}\n\n**🎵 Now playing the entrance anthem!**`)
-            .setThumbnail(track.info?.artworkUrl || null)
-            .addFields(
-                { name: '👥 People in the VC', value: vcMembers },
-                { name: '🎶 Track', value: track.info?.title || 'Welcome Anthem', inline: true },
-            )
-            .setFooter({ text: `Summoned by ${interaction.user.username} 🎺` })
-            .setTimestamp();
-
-        await interaction.editReply({ embeds: [embed] });
-
-        // Set VC status
         try {
-            await interaction.client.rest.put(
-                `/channels/${voice.id}/voice-status`,
-                { body: { status: '🎉 Welcome party in progress!' } }
-            );
-        } catch {}
+            const existingQueue = player.queues.get(interaction.guildId);
+            const is247 = existingQueue?.metadata?.is247 || false;
+
+            const { track, queue } = await player.play(voice, result, {
+                nodeOptions: {
+                    metadata: {
+                        channel: interaction.channel,
+                        is247: is247,
+                    },
+                    volume: 80,
+                    leaveOnEmpty: !is247,
+                    leaveOnEmptyCooldown: 300_000,
+                    leaveOnEnd: !is247,
+                    leaveOnEndCooldown: 300_000,
+                    selfDeaf: true,
+                },
+            });
+
+            // Pick a random welcome message
+            const welcomeMsg = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+
+            // List members in the VC
+            const vcMembers = voice.members
+                .filter(m => !m.user.bot)
+                .map(m => `> 🎤 <@${m.id}>`)
+                .join('\n') || '> *Empty VC... awkward.*';
+
+            const embed = new EmbedBuilder()
+                .setColor(0xF1C40F)
+                .setTitle('🎉 WELCOME TO THE VC!')
+                .setDescription(`${welcomeMsg}\n\n**🎵 Now playing the entrance anthem!**`)
+                .setThumbnail(track.thumbnail || null)
+                .addFields(
+                    { name: '👥 People in the VC', value: vcMembers },
+                    { name: '🎶 Track', value: track.title || 'Welcome Anthem', inline: true },
+                )
+                .setFooter({ text: `Summoned by ${interaction.user.username} 🎺` })
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+
+            try {
+                await interaction.client.rest.put(
+                    `/channels/${voice.id}/voice-status`,
+                    { body: { status: '🎉 Welcome party in progress!' } }
+                );
+            } catch {}
+        } catch (err) {
+            console.error('  ❌ Welcome play error:', err.message);
+            return interaction.editReply(`❌ Could not play welcome track: ${err.message}`);
+        }
     },
 };

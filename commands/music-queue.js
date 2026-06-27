@@ -7,30 +7,33 @@ module.exports = {
         .setDescription('📋 Show the current music queue'),
 
     async execute(interaction) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue || !queue.current) return interaction.reply({ content: '❌ The queue is empty.', ephemeral: true });
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) return interaction.reply({ content: '❌ The queue is empty.', ephemeral: true });
 
-        const current = `🎵 **Now:** [${queue.current.info.title}](${queue.current.info.uri}) \`${formatDuration(queue.current.info.length)}\``;
+        const current = `🎵 **Now:** [${queue.currentTrack.title}](${queue.currentTrack.url}) \`${formatDuration(queue.currentTrack.durationMS)}\``;
 
-        const upcoming = queue.tracks.slice(0, 10).map((t, i) =>
-            `**${i + 1}.** [${t.info.title}](${t.info.uri}) \`${formatDuration(t.info.length)}\``
+        const tracksArray = queue.tracks.toArray();
+        const upcoming = tracksArray.slice(0, 10).map((t, i) =>
+            `**${i + 1}.** [${t.title}](${t.url}) \`${formatDuration(t.durationMS)}\``
         ).join('\n');
 
-        const totalDuration = queue.tracks.reduce((acc, t) => acc + (t.info.length || 0), 0) + (queue.current.info.length || 0);
+        const totalDuration = tracksArray.reduce((acc, t) => acc + (t.durationMS || 0), 0) + (queue.currentTrack.durationMS || 0);
+
+        const loopLabel = { 0: 'Off', 1: 'Track', 2: 'Queue' };
 
         const embed = new EmbedBuilder()
             .setColor(0x5865F2)
             .setTitle('📋 Music Queue')
             .setDescription(`${current}\n\n${upcoming || '*No upcoming tracks*'}`)
             .addFields(
-                { name: '📊 Total Tracks', value: `${queue.tracks.length + 1}`, inline: true },
+                { name: '📊 Total Tracks', value: `${tracksArray.length + 1}`, inline: true },
                 { name: '⏱️ Total Duration', value: formatDuration(totalDuration), inline: true },
-                { name: '🔁 Loop', value: queue.loop, inline: true }
+                { name: '🔁 Loop', value: loopLabel[queue.repeatMode] || 'Off', inline: true }
             )
             .setTimestamp();
 
-        if (queue.tracks.length > 10) {
-            embed.setFooter({ text: `...and ${queue.tracks.length - 10} more tracks` });
+        if (tracksArray.length > 10) {
+            embed.setFooter({ text: `...and ${tracksArray.length - 10} more tracks` });
         }
 
         await interaction.reply({ embeds: [embed] });

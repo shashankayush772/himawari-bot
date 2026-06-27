@@ -17,8 +17,8 @@ fetch('https://discord.com/api/v10/gateway/bot', {
 });
 
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder } = require('discord.js');
-const { Shoukaku, Connectors } = require('shoukaku');
-const { QueueManager, buildNowPlayingButtons } = require('./utils/queue');
+const { Player } = require('discord-player');
+const { buildNowPlayingButtons } = require('./utils/queue');
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const fs = require('node:fs');
@@ -50,63 +50,84 @@ client.rest.on('invalidRequestWarning', (info) => {
     console.warn(`  [INVALID REQUEST]`, info);
 });
 
-// ── Lavalink (Shoukaku) ────────────────────────────────────
-// Only nodes confirmed working from Render
-const lavalinkNodes = [
-    { name: 'MilloHost-SSL',  url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
-    { name: 'Jirayu',         url: 'lavalink.jirayu.net:13592',          auth: 'youshallnotpass',               secure: false },
-    { name: 'Trinium-4333',   url: 'lavalink.triniumhost.com:4333',      auth: 'free',                          secure: false },
-    { name: 'Trinium-2333',   url: 'lavalink.triniumhost.com:2333',      auth: 'kirito',                        secure: false },
-    { name: 'Kasawa',         url: 'lava2.kasawa.pro:2334',              auth: 'youshallnotpass',               secure: false },
-    { name: 'MineCuta',       url: 'lavav4.minecuta.com:2333',           auth: 'discord.gg/gKuXdHs',           secure: false },
-];
-
-// Store on client so commands can access for emergency reconnects
-client.lavalinkNodes = lavalinkNodes;
-
-console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
-
-client.shoukaku = new Shoukaku(new Connectors.DiscordJS(client), lavalinkNodes, {
-    moveOnDisconnect: true,
-    reconnectTries: 5,
-    reconnectInterval: 10000,
+// ── Music Player (discord-player — NO external Lavalink needed!) ──
+const player = new Player(client, {
+    skipFFmpeg: false,
 });
+client.player = player;
 
-client.shoukaku.on('ready', (name) => {
-    console.log(`  🎵 Lavalink node "${name}" connected`);
-});
-client.shoukaku.on('error', (name, error) => {
-    console.error(`  ❌ Lavalink "${name}" error: ${error.message}`);
-});
-client.shoukaku.on('close', (name, code, reason) => {
-    console.warn(`  ⚠️  Lavalink "${name}" closed [${code}]: ${reason || 'no reason'}`);
-});
-client.shoukaku.on('disconnect', (name, players, moved) => {
-    console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players: ${players.size}. Moved: ${moved}`);
-});
-
-// Helper: force reconnect all dead nodes (callable from commands too)
-client.reconnectLavalink = () => {
-    console.log(`  🔄 [RECONNECT] Attempting to reconnect all dead nodes...`);
-    for (const nodeConfig of lavalinkNodes) {
-        const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
-        if (existingNode && (existingNode.state === 2 || existingNode.state === 1)) continue;
+// Load extractors (YouTube, SoundCloud, etc.) on ready
+client.once(Events.ClientReady, async () => {
+    try {
+        await player.extractors.loadDefault();
+        console.log('  🎵 Music extractors loaded successfully!');
+    } catch (err) {
+        console.error('  ❌ Failed to load music extractors:', err.message);
+        // Try loading without youtubei
         try {
-            if (existingNode) { try { client.shoukaku.removeNode(nodeConfig.name); } catch {} }
-            client.shoukaku.addNode(nodeConfig);
-        } catch {}
+            const { DefaultExtractors } = require('@discord-player/extractor');
+            await player.extractors.loadMulti(DefaultExtractors);
+            console.log('  🎵 Fallback extractors loaded!');
+        } catch (e) {
+            console.error('  ❌ All extractor loading failed:', e.message);
+        }
     }
-};
+});
 
-// Auto-reconnect every 30 seconds if zero nodes are connected
-setInterval(() => {
-    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length;
-    if (connectedCount === 0) {
-        client.reconnectLavalink();
+// ── Music Player Events ──
+player.events.on('playerStart', (queue, track) => {
+    console.log(`  🎶 Now playing: "${track.title}" in guild ${queue.guild.id}`);
+    
+    // Set voice channel status
+    try {
+        client.rest.put(
+            `/channels/${queue.channel.id}/voice-status`,
+            { body: { status: `🎵 ${track.title}`.substring(0, 175) } }
+        ).catch(() => {});
+    } catch {}
+});
+
+player.events.on('playerFinish', (queue, track) => {
+    console.log(`  🔚 Track finished: "${track.title}" in guild ${queue.guild.id}`);
+});
+
+player.events.on('emptyQueue', (queue) => {
+    console.log(`  📭 Queue empty in guild ${queue.guild.id}`);
+    
+    // Clear voice channel status
+    try {
+        client.rest.put(
+            `/channels/${queue.channel.id}/voice-status`,
+            { body: { status: '' } }
+        ).catch(() => {});
+    } catch {}
+    
+    // Auto-leave after 5 min if not 24/7
+    if (!queue.metadata?.is247) {
+        setTimeout(() => {
+            const q = client.player.queues.get(queue.guild.id);
+            if (q && !q.isPlaying() && !q.metadata?.is247) {
+                q.delete();
+                try {
+                    const ch = queue.metadata?.channel;
+                    if (ch) ch.send('👋 Left the voice channel due to inactivity. (Use `/247` to disable auto-leave)');
+                } catch {}
+            }
+        }, 300_000);
     }
-}, 30_000);
+});
 
-client.queue = new QueueManager(client);
+player.events.on('playerError', (queue, error, track) => {
+    console.error(`  ❌ Player error in guild ${queue.guild.id}:`, error.message);
+    try {
+        const ch = queue.metadata?.channel;
+        if (ch) ch.send(`⚠️ Error playing **${track?.title || 'track'}**: ${error.message}`);
+    } catch {}
+});
+
+player.events.on('error', (queue, error) => {
+    console.error(`  ❌ General player error in guild ${queue.guild.id}:`, error.message);
+});
 
 // ── Load Commands ──────────────────────────────────────────
 client.commands = new Collection();
@@ -129,8 +150,8 @@ for (const file of commandFiles) {
 client.on(Events.InteractionCreate, async (interaction) => {
     // ── Now Playing Button Handler ──
     if (interaction.isButton() && interaction.customId.startsWith('np_')) {
-        const queue = interaction.client.queue.get(interaction.guildId);
-        if (!queue || !queue.current) {
+        const queue = interaction.client.player.queues.get(interaction.guildId);
+        if (!queue || !queue.currentTrack) {
             return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
         }
 
@@ -139,34 +160,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
         try {
             switch (action) {
                 case 'pause': {
-                    const isPaused = queue.player.paused;
-                    queue.player.setPaused(!isPaused);
+                    queue.node.setPaused(!queue.node.isPaused());
                     const buttons = buildNowPlayingButtons(queue);
-                    // Update button appearance (pause ↔ resume)
                     await interaction.update({ components: buttons });
                     break;
                 }
                 case 'skip': {
-                    const skipped = queue.current.info.title;
-                    queue.player.stopTrack();
+                    const skipped = queue.currentTrack.title;
+                    queue.node.skip();
                     await interaction.reply({ content: `⏭️ Skipped **${skipped}**`, ephemeral: true });
                     break;
                 }
                 case 'stop': {
-                    if (queue.is247) {
-                        queue.tracks = [];
-                        queue.current = null;
-                        queue.player.stopTrack();
+                    if (queue.metadata?.is247) {
+                        queue.node.stop();
                         await interaction.reply({ content: '⏹️ Stopped playback. (24/7 mode — staying in channel)', ephemeral: true });
                     } else {
-                        queue.tracks = [];
-                        queue.current = null;
-                        queue.player.stopTrack();
-                        await interaction.client.shoukaku.leaveVoiceChannel(interaction.guildId);
-                        interaction.client.queue.delete(interaction.guildId);
+                        queue.delete();
                         await interaction.reply({ content: '⏹️ Stopped and disconnected.', ephemeral: true });
                     }
-                    // Disable buttons
                     try {
                         const disabledRows = interaction.message.components.map(row => {
                             const newRow = ActionRowBuilder.from(row);
@@ -178,23 +190,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     break;
                 }
                 case 'loop': {
-                    const modes = ['off', 'track', 'queue'];
-                    const current = modes.indexOf(queue.loop);
-                    queue.loop = modes[(current + 1) % 3];
-                    const labels = { off: '🚫 Loop Off', track: '🔂 Looping Track', queue: '🔁 Looping Queue' };
+                    // 0=off, 1=track, 2=queue
+                    const next = (queue.repeatMode + 1) % 3;
+                    queue.setRepeatMode(next);
                     const buttons = buildNowPlayingButtons(queue);
                     await interaction.update({ components: buttons });
                     break;
                 }
                 case 'shuffle': {
-                    if (queue.tracks.length < 2) {
+                    if (queue.tracks.size < 2) {
                         return interaction.reply({ content: '❌ Not enough tracks to shuffle.', ephemeral: true });
                     }
-                    for (let i = queue.tracks.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [queue.tracks[i], queue.tracks[j]] = [queue.tracks[j], queue.tracks[i]];
-                    }
-                    await interaction.reply({ content: `🔀 Shuffled **${queue.tracks.length}** tracks!`, ephemeral: true });
+                    queue.tracks.shuffle();
+                    await interaction.reply({ content: `🔀 Shuffled **${queue.tracks.size}** tracks!`, ephemeral: true });
                     break;
                 }
             }
