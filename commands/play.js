@@ -17,18 +17,38 @@ module.exports = {
         }
 
         // Get all connected nodes sorted by player count (least loaded first)
-        const connectedNodes = [...interaction.client.shoukaku.nodes.values()]
+        let connectedNodes = [...interaction.client.shoukaku.nodes.values()]
             .filter(n => n.state === 2)
             .sort((a, b) => (a.players?.size || 0) - (b.players?.size || 0));
         
+        // If no nodes are connected, try emergency reconnect and wait
         if (connectedNodes.length === 0) {
-            return interaction.reply({ content: '❌ All music servers are currently offline. They auto-reconnect every minute — please try again shortly!', ephemeral: true });
+            await interaction.deferReply();
+            interaction.editReply('🔄 Music servers are waking up... connecting now (this takes a few seconds)');
+            
+            // Trigger emergency reconnect
+            interaction.client.reconnectLavalink();
+            
+            // Wait up to 8 seconds for at least one node to connect
+            for (let i = 0; i < 16; i++) {
+                await new Promise(r => setTimeout(r, 500));
+                connectedNodes = [...interaction.client.shoukaku.nodes.values()]
+                    .filter(n => n.state === 2)
+                    .sort((a, b) => (a.players?.size || 0) - (b.players?.size || 0));
+                if (connectedNodes.length > 0) break;
+            }
+            
+            if (connectedNodes.length === 0) {
+                return interaction.editReply('❌ Could not connect to any music server. All 6 servers may be down — try again in a minute.');
+            }
         }
 
-        try {
-            await interaction.deferReply();
-        } catch {
-            return;
+        if (!interaction.deferred) {
+            try {
+                await interaction.deferReply();
+            } catch {
+                return;
+            }
         }
         const query = interaction.options.getString('query');
 

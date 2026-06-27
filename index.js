@@ -51,8 +51,7 @@ client.rest.on('invalidRequestWarning', (info) => {
 });
 
 // ── Lavalink (Shoukaku) ────────────────────────────────────
-// Only nodes confirmed working from Render (checked live logs 2026-06-25)
-// Removed: Serenetia (429 rate-limit), Trinium-SSL (403), Jirayu-SSL (instant disconnect)
+// Only nodes confirmed working from Render
 const lavalinkNodes = [
     { name: 'MilloHost-SSL',  url: 'lava-v4.millohost.my.id:443',        auth: 'https://discord.gg/mjS5J2K3ep', secure: true },
     { name: 'Jirayu',         url: 'lavalink.jirayu.net:13592',          auth: 'youshallnotpass',               secure: false },
@@ -61,6 +60,9 @@ const lavalinkNodes = [
     { name: 'Kasawa',         url: 'lava2.kasawa.pro:2334',              auth: 'youshallnotpass',               secure: false },
     { name: 'MineCuta',       url: 'lavav4.minecuta.com:2333',           auth: 'discord.gg/gKuXdHs',           secure: false },
 ];
+
+// Store on client so commands can access for emergency reconnects
+client.lavalinkNodes = lavalinkNodes;
 
 console.log(`  🎵 Configured ${lavalinkNodes.length} Lavalink node(s):`, lavalinkNodes.map(n => n.name).join(', '));
 
@@ -83,35 +85,26 @@ client.shoukaku.on('disconnect', (name, players, moved) => {
     console.warn(`  ⚠️  Lavalink "${name}" disconnected. Players: ${players.size}. Moved: ${moved}`);
 });
 
-// ── Auto-reconnect dead nodes every 90 seconds ──
-// Wait 2 minutes before first run to let Shoukaku's own reconnect logic finish
-let reconnectEnabled = false;
-setTimeout(() => { reconnectEnabled = true; }, 120_000);
-
-setInterval(() => {
-    if (!reconnectEnabled) return;
-
-    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length;
-    
-    // Only reconnect if we have ZERO working nodes (don't touch nodes that are working)
-    if (connectedCount === 0) {
-        console.log(`  🔄 [RECONNECT] 0/${lavalinkNodes.length} nodes online! Emergency reconnect...`);
-        
-        for (const nodeConfig of lavalinkNodes) {
-            const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
-            
-            // Skip if connected (state 2) or currently connecting (state 1)
-            if (existingNode && (existingNode.state === 2 || existingNode.state === 1)) continue;
-            
-            try {
-                if (existingNode) {
-                    try { client.shoukaku.removeNode(nodeConfig.name); } catch {}
-                }
-                client.shoukaku.addNode(nodeConfig);
-            } catch {}
-        }
+// Helper: force reconnect all dead nodes (callable from commands too)
+client.reconnectLavalink = () => {
+    console.log(`  🔄 [RECONNECT] Attempting to reconnect all dead nodes...`);
+    for (const nodeConfig of lavalinkNodes) {
+        const existingNode = client.shoukaku.nodes.get(nodeConfig.name);
+        if (existingNode && (existingNode.state === 2 || existingNode.state === 1)) continue;
+        try {
+            if (existingNode) { try { client.shoukaku.removeNode(nodeConfig.name); } catch {} }
+            client.shoukaku.addNode(nodeConfig);
+        } catch {}
     }
-}, 90_000);
+};
+
+// Auto-reconnect every 30 seconds if zero nodes are connected
+setInterval(() => {
+    const connectedCount = [...client.shoukaku.nodes.values()].filter(n => n.state === 2).length;
+    if (connectedCount === 0) {
+        client.reconnectLavalink();
+    }
+}, 30_000);
 
 client.queue = new QueueManager(client);
 
