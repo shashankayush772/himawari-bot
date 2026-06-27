@@ -59,18 +59,18 @@ client.player = player;
 // Load extractors (YouTube, SoundCloud, etc.) on ready
 client.once(Events.ClientReady, async () => {
     try {
-        await player.extractors.loadDefault();
-        console.log('  🎵 Music extractors loaded successfully!');
+        const { DefaultExtractors } = require('@discord-player/extractor');
+        const { YoutubeiExtractor } = require('discord-player-youtubei');
+        
+        // Load standard extractors (Spotify, SoundCloud, Apple Music)
+        await player.extractors.loadMulti(DefaultExtractors);
+        
+        // Explicitly load Youtubei to bypass YouTube bot blocks
+        await player.extractors.register(YoutubeiExtractor, {});
+        
+        console.log('  🎵 Music extractors (including YouTubei) loaded successfully!');
     } catch (err) {
         console.error('  ❌ Failed to load music extractors:', err.message);
-        // Try loading without youtubei
-        try {
-            const { DefaultExtractors } = require('@discord-player/extractor');
-            await player.extractors.loadMulti(DefaultExtractors);
-            console.log('  🎵 Fallback extractors loaded!');
-        } catch (e) {
-            console.error('  ❌ All extractor loading failed:', e.message);
-        }
     }
 });
 

@@ -28,6 +28,7 @@
     "twemoji-parser": "^14.0.0",
     "weather-js": "^2.0.0",
     "wikijs": "^6.4.1",
+    "youtube-ext": "^1.1.25",
     "ytsr": "^3.8.4"
   }
 }
