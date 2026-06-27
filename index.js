@@ -17,8 +17,6 @@ fetch('https://discord.com/api/v10/gateway/bot', {
 });
 
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder } = require('discord.js');
-const { Player } = require('discord-player');
-const { buildNowPlayingButtons } = require('./utils/queue');
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const fs = require('node:fs');
@@ -50,84 +48,6 @@ client.rest.on('invalidRequestWarning', (info) => {
     console.warn(`  [INVALID REQUEST]`, info);
 });
 
-// ── Music Player (discord-player — NO external Lavalink needed!) ──
-const player = new Player(client, {
-    skipFFmpeg: false,
-});
-client.player = player;
-
-// Load extractors (YouTube, SoundCloud, etc.) on ready
-client.once(Events.ClientReady, async () => {
-    try {
-        const { DefaultExtractors } = require('@discord-player/extractor');
-        const { YoutubeiExtractor } = require('discord-player-youtubei');
-        
-        // Load standard extractors (Spotify, SoundCloud, Apple Music)
-        await player.extractors.loadMulti(DefaultExtractors);
-        
-        // Explicitly load Youtubei to bypass YouTube bot blocks
-        await player.extractors.register(YoutubeiExtractor, {});
-        
-        console.log('  🎵 Music extractors (including YouTubei) loaded successfully!');
-    } catch (err) {
-        console.error('  ❌ Failed to load music extractors:', err.message);
-    }
-});
-
-// ── Music Player Events ──
-player.events.on('playerStart', (queue, track) => {
-    console.log(`  🎶 Now playing: "${track.title}" in guild ${queue.guild.id}`);
-    
-    // Set voice channel status
-    try {
-        client.rest.put(
-            `/channels/${queue.channel.id}/voice-status`,
-            { body: { status: `🎵 ${track.title}`.substring(0, 175) } }
-        ).catch(() => {});
-    } catch {}
-});
-
-player.events.on('playerFinish', (queue, track) => {
-    console.log(`  🔚 Track finished: "${track.title}" in guild ${queue.guild.id}`);
-});
-
-player.events.on('emptyQueue', (queue) => {
-    console.log(`  📭 Queue empty in guild ${queue.guild.id}`);
-    
-    // Clear voice channel status
-    try {
-        client.rest.put(
-            `/channels/${queue.channel.id}/voice-status`,
-            { body: { status: '' } }
-        ).catch(() => {});
-    } catch {}
-    
-    // Auto-leave after 5 min if not 24/7
-    if (!queue.metadata?.is247) {
-        setTimeout(() => {
-            const q = client.player.queues.get(queue.guild.id);
-            if (q && !q.isPlaying() && !q.metadata?.is247) {
-                q.delete();
-                try {
-                    const ch = queue.metadata?.channel;
-                    if (ch) ch.send('👋 Left the voice channel due to inactivity. (Use `/247` to disable auto-leave)');
-                } catch {}
-            }
-        }, 300_000);
-    }
-});
-
-player.events.on('playerError', (queue, error, track) => {
-    console.error(`  ❌ Player error in guild ${queue.guild.id}:`, error.message);
-    try {
-        const ch = queue.metadata?.channel;
-        if (ch) ch.send(`⚠️ Error playing **${track?.title || 'track'}**: ${error.message}`);
-    } catch {}
-});
-
-player.events.on('error', (queue, error) => {
-    console.error(`  ❌ General player error in guild ${queue.guild.id}:`, error.message);
-});
 
 // ── Load Commands ──────────────────────────────────────────
 client.commands = new Collection();

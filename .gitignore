@@ -6,3 +6,5 @@ cmd_error.log
 .local/
 .replit
 replit.nix
+_archived_music/
+_archived_tests/
