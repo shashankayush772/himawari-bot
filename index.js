@@ -90,7 +90,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     .setLabel('Invite Bot')
                     .setStyle(ButtonStyle.Link)
                     .setURL(`https://discord.com/api/oauth2/authorize?client_id=${client.user.id}&permissions=8&scope=bot%20applications.commands`)
-                    .setEmoji('🍯')
+                    .setEmoji('🍯'),
+                new ButtonBuilder()
+                    .setLabel('Support Server')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL('https://discord.gg/your-support-invite') // REPLACE THIS IN THE FUTURE
+                    .setEmoji('💬'),
+                new ButtonBuilder()
+                    .setLabel('Live Stats')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL('https://top.gg') // REPLACE THIS IN THE FUTURE
+                    .setEmoji('📊')
             );
 
             await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });

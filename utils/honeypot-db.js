@@ -73,24 +73,34 @@ async function incrementStats(guildId) {
 
 async function updateGlobalServerCount(count) {
     if (!statsCollection) return;
-    await statsCollection.updateOne(
-        { guildId: 'GLOBAL' },
-        { $set: { totalServers: count } },
-        { upsert: true }
-    );
+    try {
+        await statsCollection.updateOne(
+            { guildId: 'GLOBAL' },
+            { $set: { totalServers: count } },
+            { upsert: true }
+        );
+    } catch (err) {
+        console.error('  ⚠️ [HONEYPOT] Failed to update global server count:', err.message);
+    }
 }
 
 async function getStats(guildId) {
-    if (!statsCollection) return { serverKicks: 0, globalKicks: 0, totalServers: 0 };
+    const defaultStats = { serverKicks: 0, globalKicks: 0, totalServers: 0 };
+    if (!statsCollection) return defaultStats;
 
-    const serverStats = await statsCollection.findOne({ guildId });
-    const globalStats = await statsCollection.findOne({ guildId: 'GLOBAL' });
+    try {
+        const serverStats = await statsCollection.findOne({ guildId });
+        const globalStats = await statsCollection.findOne({ guildId: 'GLOBAL' });
 
-    return {
-        serverKicks: serverStats?.kicks || 0,
-        globalKicks: globalStats?.kicks || 0,
-        totalServers: globalStats?.totalServers || 0
-    };
+        return {
+            serverKicks: serverStats?.kicks || 0,
+            globalKicks: globalStats?.kicks || 0,
+            totalServers: globalStats?.totalServers || 0
+        };
+    } catch (err) {
+        console.error('  ⚠️ [HONEYPOT] Failed to get stats:', err.message);
+        return defaultStats;
+    }
 }
 
 module.exports = {
