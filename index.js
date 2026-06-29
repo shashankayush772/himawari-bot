@@ -16,7 +16,7 @@ fetch('https://discord.com/api/v10/gateway/bot', {
     process.exit(1);
 });
 
-const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } = require('./utils/honeypot-db');
