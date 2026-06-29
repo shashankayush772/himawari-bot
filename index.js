@@ -19,6 +19,7 @@ fetch('https://discord.com/api/v10/gateway/bot', {
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder } = require('discord.js');
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
+const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } = require('./utils/honeypot-db');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -68,69 +69,34 @@ for (const file of commandFiles) {
 
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
-    // ── Now Playing Button Handler ──
-    if (interaction.isButton() && interaction.customId.startsWith('np_')) {
-        const queue = interaction.client.player.queues.get(interaction.guildId);
-        if (!queue || !queue.currentTrack) {
-            return interaction.reply({ content: '❌ Nothing is playing.', ephemeral: true });
-        }
-
-        const action = interaction.customId.replace('np_', '');
-
+    // ── Honeypot Statistics Popup ──
+    if (interaction.isButton() && interaction.customId === 'honeypot_stats_btn') {
         try {
-            switch (action) {
-                case 'pause': {
-                    queue.node.setPaused(!queue.node.isPaused());
-                    const buttons = buildNowPlayingButtons(queue);
-                    await interaction.update({ components: buttons });
-                    break;
-                }
-                case 'skip': {
-                    const skipped = queue.currentTrack.title;
-                    queue.node.skip();
-                    await interaction.reply({ content: `⏭️ Skipped **${skipped}**`, ephemeral: true });
-                    break;
-                }
-                case 'stop': {
-                    if (queue.metadata?.is247) {
-                        queue.node.stop();
-                        await interaction.reply({ content: '⏹️ Stopped playback. (24/7 mode — staying in channel)', ephemeral: true });
-                    } else {
-                        queue.delete();
-                        await interaction.reply({ content: '⏹️ Stopped and disconnected.', ephemeral: true });
-                    }
-                    try {
-                        const disabledRows = interaction.message.components.map(row => {
-                            const newRow = ActionRowBuilder.from(row);
-                            newRow.components.forEach(btn => btn.setDisabled(true));
-                            return newRow;
-                        });
-                        await interaction.message.edit({ components: disabledRows });
-                    } catch {}
-                    break;
-                }
-                case 'loop': {
-                    // 0=off, 1=track, 2=queue
-                    const next = (queue.repeatMode + 1) % 3;
-                    queue.setRepeatMode(next);
-                    const buttons = buildNowPlayingButtons(queue);
-                    await interaction.update({ components: buttons });
-                    break;
-                }
-                case 'shuffle': {
-                    if (queue.tracks.size < 2) {
-                        return interaction.reply({ content: '❌ Not enough tracks to shuffle.', ephemeral: true });
-                    }
-                    queue.tracks.shuffle();
-                    await interaction.reply({ content: `🔀 Shuffled **${queue.tracks.size}** tracks!`, ephemeral: true });
-                    break;
-                }
-            }
+            // Update the global server count just to keep it fresh
+            await updateGlobalServerCount(client.guilds.cache.size);
+            const stats = await getStats(interaction.guildId);
+
+            const embed = new EmbedBuilder()
+                .setTitle('🍯 Honeypot Statistics 🍯')
+                .setColor(0x2B2D31)
+                .addFields(
+                    { name: 'Server Stats:', value: `Total moderated in this server: \`${stats.serverKicks}\`` },
+                    { name: 'Global Stats:', value: `Total servers: \`${stats.totalServers.toLocaleString()}\`\nTotal moderations: \`${stats.globalKicks.toLocaleString()}\`` }
+                )
+                .setFooter({ text: 'Thank you for using Himawari to keep your servers safe from unwanted bots!' });
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setLabel('Invite Bot')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(`https://discord.com/api/oauth2/authorize?client_id=${client.user.id}&permissions=8&scope=bot%20applications.commands`)
+                    .setEmoji('🍯')
+            );
+
+            await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
         } catch (err) {
-            console.error('Button handler error:', err.message);
-            if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true }).catch(() => {});
-            }
+            console.error('Honeypot button error:', err);
+            await interaction.reply({ content: '❌ Could not load statistics right now.', ephemeral: true }).catch(() => {});
         }
         return;
     }
@@ -195,6 +161,35 @@ function getPrefix(guildId) {
 }
 
 client.on(Events.MessageCreate, async (message) => {
+    // ── Honeypot Trap Logic ──
+    if (message.guild && !message.author.bot) {
+        const trapChannelId = getHoneypotChannel(message.guild.id);
+        if (trapChannelId && message.channel.id === trapChannelId) {
+            // INSTANT BAN!
+            try {
+                await message.delete();
+                await message.guild.members.ban(message.author.id, { reason: 'Typed in Honeypot channel (Automated Raid Defense)' });
+                
+                await incrementStats(message.guild.id);
+                const stats = await getStats(message.guild.id);
+
+                // Try to update the button on the sticky message
+                const messages = await message.channel.messages.fetch({ limit: 10 });
+                const stickyMsg = messages.find(m => m.author.id === client.user.id && m.components.length > 0);
+                
+                if (stickyMsg) {
+                    const oldRow = stickyMsg.components[0];
+                    const newRow = ActionRowBuilder.from(oldRow);
+                    newRow.components[0].setLabel(`Kicks: ${stats.serverKicks}`);
+                    await stickyMsg.edit({ components: [newRow] }).catch(() => {});
+                }
+            } catch (err) {
+                console.error(`  ⚠️ [HONEYPOT] Failed to ban ${message.author.tag} in ${message.guild.id}:`, err.message);
+            }
+            return; // Stop processing this message further
+        }
+    }
+
     // Ignore bots, DMs
     if (message.author.bot || !message.guild) return;
 
