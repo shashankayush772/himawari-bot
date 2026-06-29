@@ -94,7 +94,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 new ButtonBuilder()
                     .setLabel('Support Server')
                     .setStyle(ButtonStyle.Link)
-                    .setURL('https://discord.gg/your-support-invite') // REPLACE THIS IN THE FUTURE
+                    .setURL('https://discord.gg/yw5JkdGT6v')
                     .setEmoji('💬'),
                 new ButtonBuilder()
                     .setLabel('Live Stats')
