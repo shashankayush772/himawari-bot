@@ -126,9 +126,14 @@ async function fetchAIResponse(channelId, username, message, userId) {
     const history = channelHistory.get(channelId);
     history.push({ role: 'user', parts: [{ text: `${username}: ${message}` }] });
 
-    // Keep only last N messages
+    // Keep only last N messages (ensure it starts with 'user' role)
     if (history.length > MAX_HISTORY) {
-        history.splice(0, history.length - MAX_HISTORY);
+        let spliceIndex = history.length - MAX_HISTORY;
+        // Gemini API strictly requires the first message to be from 'user'
+        if (history[spliceIndex].role === 'model') {
+            spliceIndex += 1;
+        }
+        history.splice(0, spliceIndex);
     }
 
     let dynamicPrompt = SYSTEM_PROMPT;
