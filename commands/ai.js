@@ -96,8 +96,8 @@ async function processQueue(channelId) {
         } catch (err) {
             resolve(null);
         }
-        // Wait 1 second between API calls to prevent rate limits
-        await new Promise(r => setTimeout(r, 1000));
+        // Wait 4.1 seconds between API calls to strictly respect Google's 15 Requests Per Minute limit
+        await new Promise(r => setTimeout(r, 4100));
     }
     queue.isProcessing = false;
 }
