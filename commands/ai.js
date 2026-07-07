@@ -115,7 +115,7 @@ async function getAIResponse(channelId, username, message, userId) {
 }
 
 async function fetchAIResponse(channelId, username, message, userId) {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY; // fallback if they don't rename it
     if (!apiKey) return '⚠️ API Key missing in environment variables!';
 
     // Maintain conversation history
@@ -143,38 +143,45 @@ async function fetchAIResponse(channelId, username, message, userId) {
 
     try {
         const axios = require('axios');
-        const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            system_instruction: { parts: [{ text: dynamicPrompt }] },
-            contents: history,
-            generationConfig: {
-                maxOutputTokens: 150,
-                temperature: 1.2
-            },
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-            ]
+        
+        // Map Gemini history format to Groq/OpenAI format for the API request
+        const groqMessages = [
+            { role: 'system', content: dynamicPrompt }
+        ];
+        
+        for (const msg of history) {
+            groqMessages.push({
+                role: msg.role === 'model' ? 'assistant' : 'user',
+                content: msg.parts[0].text
+            });
+        }
+
+        const res = await axios.post(`https://api.groq.com/openai/v1/chat/completions`, {
+            model: "llama3-70b-8192",
+            messages: groqMessages,
+            max_tokens: 150,
+            temperature: 1.2
         }, {
-            headers: { 'Content-Type': 'application/json' },
-            validateStatus: () => true // Don't throw error on 4xx/5xx statuses
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            validateStatus: () => true
         });
 
         if (res.status !== 200) {
-            console.error(`  ❌ [AI] Gemini API error: ${res.status} - ${JSON.stringify(res.data)}`);
-            // If it failed, pop the user's message out of history so it doesn't corrupt context
+            console.error(`  ❌ [AI] Groq API error: ${res.status} - ${JSON.stringify(res.data)}`);
             history.pop();
             return null;
         }
 
         const data = res.data;
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        const reply = data?.choices?.[0]?.message?.content;
 
         if (!reply) {
-            console.error(`  ❌ [AI] Gemini returned no text. Finish Reason: ${data?.candidates?.[0]?.finishReason}`);
+            console.error(`  ❌ [AI] Groq returned no text.`);
             history.pop();
-            return "*(She tried to reply, but Google's safety filters blocked her message!)* 🤐";
+            return "*(I tried to reply, but my brain glitched!)* 😵";
         }
 
         // Add bot reply to history for context
@@ -187,7 +194,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
 
         return reply;
     } catch (err) {
-        console.error('  ❌ [AI] Gemini request failed:', err.message);
+        console.error('  ❌ [AI] Groq request failed:', err.message);
         history.pop(); // Remove user message on failure
         return null;
     }
