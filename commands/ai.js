@@ -138,7 +138,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
 
     try {
         const axios = require('axios');
-        const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+        const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             system_instruction: { parts: [{ text: dynamicPrompt }] },
             contents: history,
             generationConfig: {
