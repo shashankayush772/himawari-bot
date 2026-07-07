@@ -80,7 +80,7 @@ const COOLDOWN_MS = 3000;
 
 async function getAIResponse(channelId, username, message) {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return null;
+    if (!apiKey) return '⚠️ API Key missing in environment variables!';
 
     // Rate limit check
     const now = Date.now();
@@ -103,26 +103,25 @@ async function getAIResponse(channelId, username, message) {
     }
 
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
-            method: 'POST',
+        const axios = require('axios');
+        const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: history,
+            generationConfig: {
+                maxOutputTokens: 150,
+                temperature: 1.2
+            }
+        }, {
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-                contents: history,
-                generationConfig: {
-                    maxOutputTokens: 150,
-                    temperature: 1.2
-                }
-            })
+            validateStatus: () => true // Don't throw error on 4xx/5xx statuses
         });
 
-        if (!res.ok) {
-            const errData = await res.text();
-            console.error(`  ❌ [AI] Gemini API error: ${res.status} ${res.statusText} - ${errData}`);
-            return `⚠️ API Error: ${res.status} - ${errData}`;
+        if (res.status !== 200) {
+            console.error(`  ❌ [AI] Gemini API error: ${res.status} - ${JSON.stringify(res.data)}`);
+            return `⚠️ API Error: ${res.status} - ${JSON.stringify(res.data)}`;
         }
 
-        const data = await res.json();
+        const data = res.data;
         const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (reply) {
