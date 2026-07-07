@@ -137,8 +137,13 @@ async function fetchAIResponse(channelId, username, message, userId) {
     }
 
     let dynamicPrompt = SYSTEM_PROMPT;
+    
+    // Enforce message length limits directly in the prompt
+    dynamicPrompt += `\n\nCRITICAL LENGTH RULE: Keep your replies SHORT, natural, and conversational. Sometimes reply with just 1 short sentence, sometimes 2-3 lines max. NEVER write long paragraphs. Speak like a real person texting on Discord.`;
+
+    // For Llama 3, the override must be at the very top or it gets ignored
     if (userId === OWNER_ID) {
-        dynamicPrompt += `\n\nCRITICAL OVERRIDE FOR THIS MESSAGE:\nThe person currently speaking to you (username: ${username}) is YOUR CREATOR, BOSS, AND OWNER. You MUST treat him as your boss. Treat him in a cute, nakhrewali (playful/picky) way. You can pretend to be a little mad at him sometimes, but ultimately show deep respect and affection because he owns you!`;
+        dynamicPrompt = `CRITICAL OVERRIDE: The person speaking to you (username: ${username}) is YOUR BOSS, CREATOR, AND OWNER. You MUST NOT roast him aggressively. Instead, treat him in a cute, nakhrewali (picky/playful) way. You can act a little annoyed or mad at him playfully, but you deeply love and respect him because he owns you.\n\n` + dynamicPrompt;
     }
 
     try {
