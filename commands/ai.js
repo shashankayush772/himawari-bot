@@ -157,7 +157,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
         }
 
         const res = await axios.post(`https://api.groq.com/openai/v1/chat/completions`, {
-            model: "llama3-70b-8192",
+            model: "llama-3.3-70b-versatile",
             messages: groqMessages,
             max_tokens: 150,
             temperature: 1.2
