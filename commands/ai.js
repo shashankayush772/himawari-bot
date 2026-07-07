@@ -276,21 +276,39 @@ async function fetchAIResponse(channelId, username, message, userId) {
             });
         }
 
-        const res = await axios.post(`https://api.groq.com/openai/v1/chat/completions`, {
-            model: "llama-3.1-8b-instant",
-            messages: groqMessages,
-            max_tokens: 150,
-            temperature: 1.2
-        }, {
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            validateStatus: () => true
-        });
+        // Automatic Fallback System to combine quotas (200k+ tokens per day)
+        const modelsToTry = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"];
+        let res = null;
 
-        if (res.status !== 200) {
-            console.error(`  ❌ [AI] Groq API error: ${res.status} - ${JSON.stringify(res.data)}`);
+        for (const modelName of modelsToTry) {
+            res = await axios.post(`https://api.groq.com/openai/v1/chat/completions`, {
+                model: modelName,
+                messages: groqMessages,
+                max_tokens: 150,
+                temperature: 1.2
+            }, {
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                validateStatus: () => true
+            });
+
+            // If success, break out of loop
+            if (res.status === 200) break;
+            
+            // If Rate Limited (429), log it and let the loop try the next model
+            if (res.status === 429) {
+                console.warn(`  ⚠️ [AI] Groq rate limit hit for ${modelName}. Falling back to next model...`);
+                continue; 
+            }
+
+            // If some other error, break out
+            break;
+        }
+
+        if (!res || res.status !== 200) {
+            console.error(`  ❌ [AI] Groq API error: ${res?.status} - ${JSON.stringify(res?.data)}`);
             history.pop();
             return null;
         }
