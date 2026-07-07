@@ -80,6 +80,8 @@ const COOLDOWN_MS = 3000;
 
 const messageQueues = new Map();
 
+const OWNER_ID = '814328153513525308'; // Ayushh <3
+
 async function processQueue(channelId) {
     const queue = messageQueues.get(channelId);
     if (!queue || queue.length === 0) return;
@@ -87,9 +89,9 @@ async function processQueue(channelId) {
 
     queue.isProcessing = true;
     while (queue.length > 0) {
-        const { username, message, resolve } = queue.shift();
+        const { username, message, userId, resolve } = queue.shift();
         try {
-            const reply = await fetchAIResponse(channelId, username, message);
+            const reply = await fetchAIResponse(channelId, username, message, userId);
             resolve(reply);
         } catch (err) {
             resolve(null);
@@ -100,19 +102,19 @@ async function processQueue(channelId) {
     queue.isProcessing = false;
 }
 
-async function getAIResponse(channelId, username, message) {
+async function getAIResponse(channelId, username, message, userId) {
     return new Promise((resolve) => {
         if (!messageQueues.has(channelId)) {
             const queue = [];
             queue.isProcessing = false;
             messageQueues.set(channelId, queue);
         }
-        messageQueues.get(channelId).push({ username, message, resolve });
+        messageQueues.get(channelId).push({ username, message, userId, resolve });
         processQueue(channelId);
     });
 }
 
-async function fetchAIResponse(channelId, username, message) {
+async function fetchAIResponse(channelId, username, message, userId) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return '⚠️ API Key missing in environment variables!';
 
@@ -120,9 +122,8 @@ async function fetchAIResponse(channelId, username, message) {
     if (!channelHistory.has(channelId)) {
         channelHistory.set(channelId, []);
     }
-    const history = channelHistory.get(channelId);
 
-    // Add new message to history
+    const history = channelHistory.get(channelId);
     history.push({ role: 'user', parts: [{ text: `${username}: ${message}` }] });
 
     // Keep only last N messages
@@ -130,10 +131,15 @@ async function fetchAIResponse(channelId, username, message) {
         history.splice(0, history.length - MAX_HISTORY);
     }
 
+    let dynamicPrompt = SYSTEM_PROMPT;
+    if (userId === OWNER_ID) {
+        dynamicPrompt += `\n\nCRITICAL OVERRIDE FOR THIS MESSAGE:\nThe person currently speaking to you (username: ${username}) is YOUR CREATOR, BOSS, AND OWNER. You MUST treat him as your boss. Treat him in a cute, nakhrewali (playful/picky) way. You can pretend to be a little mad at him sometimes, but ultimately show deep respect and affection because he owns you!`;
+    }
+
     try {
         const axios = require('axios');
         const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
-            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            system_instruction: { parts: [{ text: dynamicPrompt }] },
             contents: history,
             generationConfig: {
                 maxOutputTokens: 150,

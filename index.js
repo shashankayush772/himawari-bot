@@ -212,7 +212,7 @@ client.on(Events.MessageCreate, async (message) => {
         if (!message.content.startsWith(prefix)) {
             try {
                 await message.channel.sendTyping();
-                const reply = await getAIResponse(message.channelId, message.author.displayName || message.author.username, message.content);
+                const reply = await getAIResponse(message.channelId, message.author.displayName || message.author.username, message.content, message.author.id);
                 if (reply) {
                     // Split long replies into 2000 char chunks (Discord limit)
                     if (reply.length > 2000) {
