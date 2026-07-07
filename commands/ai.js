@@ -296,13 +296,16 @@ async function fetchAIResponse(channelId, username, message, userId) {
         }
 
         const data = res.data;
-        const reply = data?.choices?.[0]?.message?.content;
+        let reply = data?.choices?.[0]?.message?.content;
 
         if (!reply) {
             console.error(`  ❌ [AI] Groq returned no text.`);
             history.pop();
             return "*(I tried to reply, but my brain glitched!)* 😵";
         }
+
+        // Clean up: Remove leading/trailing quotes if the model wrapped its response in them
+        reply = reply.trim().replace(/^"|"$/g, '').trim();
 
         // Add bot reply to history for context
         history.push({ role: 'model', parts: [{ text: reply }] });
