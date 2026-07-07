@@ -20,6 +20,7 @@ const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBu
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } = require('./utils/honeypot-db');
+const { isAIEnabled, getAIResponse } = require('./commands/ai');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -204,6 +205,29 @@ client.on(Events.MessageCreate, async (message) => {
     if (message.author.bot || !message.guild) return;
 
     const prefix = getPrefix(message.guildId);
+
+    // ── AI Chatbot Logic ──
+    if (isAIEnabled(message.channelId)) {
+        // Don't respond to prefix commands even in AI channels
+        if (!message.content.startsWith(prefix)) {
+            try {
+                await message.channel.sendTyping();
+                const reply = await getAIResponse(message.channelId, message.author.displayName || message.author.username, message.content);
+                if (reply) {
+                    // Split long replies into 2000 char chunks (Discord limit)
+                    if (reply.length > 2000) {
+                        await message.reply(reply.substring(0, 2000));
+                    } else {
+                        await message.reply(reply);
+                    }
+                }
+            } catch (err) {
+                console.error('  ❌ [AI] Failed to reply:', err.message);
+            }
+            return; // Don't process AI messages as prefix commands
+        }
+    }
+
     if (!message.content.startsWith(prefix)) return;
 
     const args = message.content.slice(prefix.length).trim().split(/\s+/);
