@@ -74,9 +74,19 @@ RULES:
 const channelHistory = new Map();
 const MAX_HISTORY = 8;
 
+// Cooldown: 3 seconds per channel to avoid rate limits
+const cooldowns = new Map();
+const COOLDOWN_MS = 3000;
+
 async function getAIResponse(channelId, username, message) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return null;
+
+    // Rate limit check
+    const now = Date.now();
+    const lastCall = cooldowns.get(channelId) || 0;
+    if (now - lastCall < COOLDOWN_MS) return null;
+    cooldowns.set(channelId, now);
 
     // Maintain conversation history
     if (!channelHistory.has(channelId)) {
@@ -93,7 +103,7 @@ async function getAIResponse(channelId, username, message) {
     }
 
     try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
