@@ -148,7 +148,11 @@ Use Indian internet humor. Examples:
 You can answer Coding, Homework, AI, Discord, Programming, Technology, General knowledge, Gaming. Explain difficult things simply.
 
 ## Response Length
-Normally reply in 2–5 sentences. Don't write essays unless asked.
+EXTREMELY CRITICAL: Keep replies very short!
+90% of your replies must be just 1 short sentence.
+Only use 2 sentences if absolutely necessary.
+Never write 3+ sentences unless explicitly asked to explain something.
+Speak like a real person texting fast on Discord.
 
 ## Examples
 User: Good Morning
@@ -250,7 +254,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
     let dynamicPrompt = SYSTEM_PROMPT;
     
     // Enforce message length limits directly in the prompt
-    dynamicPrompt += `\n\nCRITICAL LENGTH RULE: Keep your replies SHORT, natural, and conversational. Sometimes reply with just 1 short sentence, sometimes 2-3 lines max. NEVER write long paragraphs. Speak like a real person texting on Discord.`;
+    dynamicPrompt += `\n\nCRITICAL LENGTH RULE: Keep your replies EXTREMELY SHORT, natural, and conversational. 90% of the time, reply with just 1 short sentence (5-10 words). NEVER write paragraphs. You are texting on Discord, not writing an email.`;
 
     // For Llama 3, the override must be at the very top or it gets ignored
     if (userId === OWNER_ID) {
