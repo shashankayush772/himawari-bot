@@ -82,12 +82,6 @@ async function getAIResponse(channelId, username, message) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return '⚠️ API Key missing in environment variables!';
 
-    // Rate limit check
-    const now = Date.now();
-    const lastCall = cooldowns.get(channelId) || 0;
-    if (now - lastCall < COOLDOWN_MS) return null;
-    cooldowns.set(channelId, now);
-
     // Maintain conversation history
     if (!channelHistory.has(channelId)) {
         channelHistory.set(channelId, []);
