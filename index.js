@@ -369,7 +369,8 @@ client.once(Events.ClientReady, (c) => {
         const statuses = [
             { text: '💬 Use /ai to chat with me!', type: ActivityType.Playing },
             { text: '🤖 Verified by Discord!', type: ActivityType.Playing },
-            { text: 'Developed by Ayushh <3', type: ActivityType.Watching }
+            { text: 'Developed by Ayushh <3', type: ActivityType.Watching },
+            { text: `${c.guilds.cache.reduce((a, g) => a + g.memberCount, 0)} members in ${c.guilds.cache.size} servers`, type: ActivityType.Watching }
         ];
 
         const status = statuses[statusIndex];
