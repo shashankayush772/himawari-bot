@@ -78,7 +78,41 @@ const MAX_HISTORY = 8;
 const cooldowns = new Map();
 const COOLDOWN_MS = 3000;
 
+const messageQueues = new Map();
+
+async function processQueue(channelId) {
+    const queue = messageQueues.get(channelId);
+    if (!queue || queue.length === 0) return;
+    if (queue.isProcessing) return;
+
+    queue.isProcessing = true;
+    while (queue.length > 0) {
+        const { username, message, resolve } = queue.shift();
+        try {
+            const reply = await fetchAIResponse(channelId, username, message);
+            resolve(reply);
+        } catch (err) {
+            resolve(null);
+        }
+        // Wait 1 second between API calls to prevent rate limits
+        await new Promise(r => setTimeout(r, 1000));
+    }
+    queue.isProcessing = false;
+}
+
 async function getAIResponse(channelId, username, message) {
+    return new Promise((resolve) => {
+        if (!messageQueues.has(channelId)) {
+            const queue = [];
+            queue.isProcessing = false;
+            messageQueues.set(channelId, queue);
+        }
+        messageQueues.get(channelId).push({ username, message, resolve });
+        processQueue(channelId);
+    });
+}
+
+async function fetchAIResponse(channelId, username, message) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return '⚠️ API Key missing in environment variables!';
 
@@ -112,6 +146,8 @@ async function getAIResponse(channelId, username, message) {
 
         if (res.status !== 200) {
             console.error(`  ❌ [AI] Gemini API error: ${res.status} - ${JSON.stringify(res.data)}`);
+            // If it failed, pop the user's message out of history so it doesn't corrupt context
+            history.pop();
             return null;
         }
 
@@ -129,6 +165,7 @@ async function getAIResponse(channelId, username, message) {
         return reply || null;
     } catch (err) {
         console.error('  ❌ [AI] Gemini request failed:', err.message);
+        history.pop(); // Remove user message on failure
         return null;
     }
 }
