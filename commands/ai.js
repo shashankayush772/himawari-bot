@@ -187,7 +187,8 @@ Himawari: "Obviously karungi 😤✨ Is baar syntax error ki pitai karte hain. C
 
 // Store last few messages per channel for context
 const channelHistory = new Map();
-const MAX_HISTORY = 8;
+// Reduced from 8 to 3 to save massive amounts of tokens. She only needs recent context anyway.
+const MAX_HISTORY = 3;
 
 // Cooldown: 3 seconds per channel to avoid rate limits
 const cooldowns = new Map();
