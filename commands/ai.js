@@ -117,8 +117,9 @@ async function getAIResponse(channelId, username, message) {
         });
 
         if (!res.ok) {
-            console.error(`  ❌ [AI] Gemini API error: ${res.status} ${res.statusText}`);
-            return null;
+            const errData = await res.text();
+            console.error(`  ❌ [AI] Gemini API error: ${res.status} ${res.statusText} - ${errData}`);
+            return `⚠️ API Error: ${res.status} - ${errData}`;
         }
 
         const data = await res.json();
@@ -130,12 +131,14 @@ async function getAIResponse(channelId, username, message) {
             if (history.length > MAX_HISTORY) {
                 history.splice(0, history.length - MAX_HISTORY);
             }
+        } else {
+            return `⚠️ Unexpected API response: ${JSON.stringify(data).substring(0, 500)}`;
         }
 
         return reply || null;
     } catch (err) {
         console.error('  ❌ [AI] Gemini request failed:', err.message);
-        return null;
+        return `⚠️ Request failed: ${err.message}`;
     }
 }
 
