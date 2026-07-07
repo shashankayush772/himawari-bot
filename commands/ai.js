@@ -309,9 +309,43 @@ async function fetchAIResponse(channelId, username, message, userId) {
         }
 
         if (!res || res.status !== 200) {
-            console.error(`  ❌ [AI] Groq API error: ${res?.status} - ${JSON.stringify(res?.data)}`);
-            history.pop();
-            return null;
+            console.warn(`  ⚠️ [AI] All Groq models exhausted or failed! Falling back to Gemini 2.5 Flash as ultimate backup...`);
+            const geminiKey = process.env.GEMINI_API_KEY;
+            
+            if (!geminiKey) {
+                console.error(`  ❌ [AI] Groq failed and no Gemini API key found for backup.`);
+                history.pop();
+                return null;
+            }
+
+            try {
+                const geminiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+                    system_instruction: { parts: [{ text: dynamicPrompt }] },
+                    contents: history,
+                    safetySettings: [
+                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                    ]
+                });
+                
+                let geminiReply = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!geminiReply) {
+                    history.pop();
+                    return "*(I tried to reply, but my brain glitched!)* 😵";
+                }
+                
+                geminiReply = geminiReply.trim().replace(/^"|"$/g, '').trim();
+                history.push({ role: 'model', parts: [{ text: geminiReply }] });
+                if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
+                return geminiReply;
+
+            } catch (geminiErr) {
+                console.error(`  ❌ [AI] Gemini Backup failed:`, geminiErr.message);
+                history.pop();
+                return null;
+            }
         }
 
         const data = res.data;
