@@ -149,7 +149,13 @@ async function fetchAIResponse(channelId, username, message, userId) {
             generationConfig: {
                 maxOutputTokens: 150,
                 temperature: 1.2
-            }
+            },
+            safetySettings: [
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+            ]
         }, {
             headers: { 'Content-Type': 'application/json' },
             validateStatus: () => true // Don't throw error on 4xx/5xx statuses
@@ -165,15 +171,21 @@ async function fetchAIResponse(channelId, username, message, userId) {
         const data = res.data;
         const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (reply) {
-            // Add bot reply to history for context
-            history.push({ role: 'model', parts: [{ text: reply }] });
-            if (history.length > MAX_HISTORY) {
-                history.splice(0, history.length - MAX_HISTORY);
-            }
+        if (!reply) {
+            console.error(`  ❌ [AI] Gemini returned no text. Finish Reason: ${data?.candidates?.[0]?.finishReason}`);
+            history.pop();
+            return "*(She tried to reply, but Google's safety filters blocked her message!)* 🤐";
         }
 
-        return reply || null;
+        // Add bot reply to history for context
+        history.push({ role: 'model', parts: [{ text: reply }] });
+        if (history.length > MAX_HISTORY) {
+            let spliceIndex = history.length - MAX_HISTORY;
+            if (history[spliceIndex].role === 'model') spliceIndex += 1;
+            history.splice(0, spliceIndex);
+        }
+
+        return reply;
     } catch (err) {
         console.error('  ❌ [AI] Gemini request failed:', err.message);
         history.pop(); // Remove user message on failure
