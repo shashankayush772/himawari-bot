@@ -360,6 +360,24 @@ client.once(Events.ClientReady, (c) => {
 
     // Start YouTube Live stream monitor
     startYouTubeLiveMonitor(c);
+
+    // Rotating Status
+    const { ActivityType } = require('discord.js');
+    let statusIndex = 0;
+    
+    setInterval(() => {
+        const statuses = [
+            { text: '💬 Use /ai to chat with me!', type: ActivityType.Playing },
+            { text: '🤖 Verified by Discord!', type: ActivityType.Playing },
+            { text: 'Developed by Ayushh <3', type: ActivityType.Watching },
+            { text: `${c.guilds.cache.reduce((a, g) => a + g.memberCount, 0)} members in ${c.guilds.cache.size} servers`, type: ActivityType.Watching }
+        ];
+
+        const status = statuses[statusIndex];
+        c.user.setActivity(status.text, { type: status.type });
+
+        statusIndex = (statusIndex + 1) % statuses.length;
+    }, 15000); // 15 seconds
 });
 
 // ── Global Error Handling ────────────────────────────────

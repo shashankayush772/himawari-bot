@@ -7,6 +7,10 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
+        if (interaction.user.id !== '814328153513525308') {
+            return interaction.reply({ content: '❌ You are not the bot owner.', ephemeral: true });
+        }
+
         const guilds = interaction.client.guilds.cache
             .sort((a, b) => b.memberCount - a.memberCount)
             .map((g, i) => `**${i + 1}.** ${g.name} | ${g.memberCount} Members\n\`ID: ${g.id}\``);
