@@ -20,7 +20,7 @@ const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBu
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } = require('./utils/honeypot-db');
-const { isAIEnabled, getAIResponse } = require('./commands/ai');
+// Removed static require of ai.js to prevent state desync during hot-reloads
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -207,12 +207,13 @@ client.on(Events.MessageCreate, async (message) => {
     const prefix = getPrefix(message.guildId);
 
     // ── AI Chatbot Logic ──
-    if (isAIEnabled(message.channelId)) {
+    const aiCmd = client.commands.get('ai');
+    if (aiCmd && aiCmd.isAIEnabled(message.channelId)) {
         // Don't respond to prefix commands even in AI channels
         if (!message.content.startsWith(prefix)) {
             try {
                 await message.channel.sendTyping();
-                const reply = await getAIResponse(message.channelId, message.author.displayName || message.author.username, message.content, message.author.id);
+                const reply = await aiCmd.getAIResponse(message.channelId, message.author.displayName || message.author.username, message.content, message.author.id);
                 if (reply) {
                     // Split long replies into 2000 char chunks (Discord limit)
                     if (reply.length > 2000) {
