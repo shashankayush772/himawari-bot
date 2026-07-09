@@ -277,8 +277,8 @@ async function fetchAIResponse(channelId, username, message, userId) {
             });
         }
 
-        // Automatic Fallback System to combine quotas (200k+ tokens per day)
-        const modelsToTry = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"];
+        // Set the 70B model as primary (excellent Hinglish). If it runs out of tokens, Gemini takes over!
+        const modelsToTry = ["llama-3.3-70b-versatile"];
         let res = null;
 
         for (const modelName of modelsToTry) {
@@ -286,7 +286,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
                 model: modelName,
                 messages: groqMessages,
                 max_tokens: 150,
-                temperature: 1.2
+                temperature: 0.95
             }, {
                 headers: { 
                     'Content-Type': 'application/json',
