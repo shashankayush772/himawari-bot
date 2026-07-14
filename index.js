@@ -394,11 +394,11 @@ client.once(Events.ClientReady, (c) => {
 // ── Global Error Handling ────────────────────────────────
 process.on('unhandledRejection', (reason, promise) => {
     console.error('  ⚠️  [Unhandled Rejection]', promise, 'reason:', reason);
-    process.exit(1); // Force exit so Render restarts it and logs the error
+    // process.exit(1); - Removed so bot doesn't crash on Poru Lavalink connection timeouts
 });
 process.on('uncaughtException', (err) => {
     console.error('  ⚠️  [Uncaught Exception]', err);
-    process.exit(1); // Force exit so Render restarts it and logs the error
+    // process.exit(1); - Prevent render crash loop
 });
 
 // Start the Bot
