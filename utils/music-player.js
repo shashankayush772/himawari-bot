@@ -95,10 +95,14 @@ function buildNowPlayingMessage(queue, song) {
 
 // ── Initialize DisTube on the client ──
 function setupMusicPlayer(client) {
+    const ffmpegPath = require('ffmpeg-static');
     const distube = new DisTube(client, {
         emitNewSongOnly: true,
         emitAddSongWhenCreatingQueue: false,
         emitAddListWhenCreatingQueue: false,
+        ffmpeg: {
+            path: ffmpegPath
+        }
     });
 
     client.distube = distube;
