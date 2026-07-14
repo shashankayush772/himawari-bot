@@ -1,18 +1,30 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { useQueue } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('volume')
-        .setDescription('🔊 Adjust the music volume')
-        .addIntegerOption(opt => opt.setName('level').setDescription('Volume level (1-100)').setRequired(true).setMinValue(1).setMaxValue(100)),
+        .setDescription('🔊 Changes the volume of the music')
+        .addIntegerOption(opt => opt.setName('amount').setDescription('Volume amount (0-100)').setRequired(true)),
 
     async execute(interaction) {
-        const player = interaction.client.poru?.players.get(interaction.guildId);
-        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        const amount = interaction.options.getInteger('amount');
+        const queue = useQueue(interaction.guild.id);
+        
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        }
 
-        const volume = interaction.options.getInteger('level');
-        player.setVolume(volume);
+        const member = interaction.member;
+        if (!member?.voice?.channel || member.voice.channel.id !== queue.channel.id) {
+            return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true });
+        }
 
-        await interaction.reply(`🔊 Volume set to **${volume}%**`);
+        if (amount < 0 || amount > 100) {
+            return interaction.reply({ content: '❌ Volume must be between 0 and 100!', ephemeral: true });
+        }
+
+        queue.node.setVolume(amount);
+        await interaction.reply(`🔊 Volume set to **${amount}%**!`);
     },
 };

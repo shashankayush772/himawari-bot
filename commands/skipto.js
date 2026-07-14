@@ -1,27 +1,30 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { useQueue } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('skipto')
-        .setDescription('⏭️ Skip to a specific song in the queue')
-        .addIntegerOption(opt => opt.setName('position').setDescription('Position of the song to skip to').setRequired(true).setMinValue(1)),
+        .setDescription('⏭️ Skips to a specific track in the queue')
+        .addIntegerOption(opt => opt.setName('position').setDescription('Queue position').setRequired(true)),
 
     async execute(interaction) {
-        const player = interaction.client.poru?.players.get(interaction.guildId);
-        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
-
-        const pos = interaction.options.getInteger('position');
-
-        if (pos > player.queue.length || pos < 1) {
-            return interaction.reply({ content: `❌ Invalid position! Queue only has ${player.queue.length} songs.`, ephemeral: true });
+        const position = interaction.options.getInteger('position');
+        const queue = useQueue(interaction.guild.id);
+        
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
         }
 
-        try {
-            player.queue.splice(0, pos - 1);
-            player.stop();
-            await interaction.reply(`⏭️ Skipped to position **#${pos}**!`);
-        } catch (err) {
-            await interaction.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });
+        const member = interaction.member;
+        if (!member?.voice?.channel || member.voice.channel.id !== queue.channel.id) {
+            return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true });
         }
+
+        if (position < 1 || position > queue.tracks.size) {
+            return interaction.reply({ content: '❌ Invalid track position!', ephemeral: true });
+        }
+
+        queue.node.skipTo(position - 1);
+        await interaction.reply(`⏭️ Skipped to track **#${position}**!`);
     },
 };

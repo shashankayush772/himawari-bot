@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { useMainPlayer } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('play')
-        .setDescription('🎵 Play a song from YouTube')
-        .addStringOption(opt => opt.setName('query').setDescription('Song name or YouTube URL').setRequired(true)),
+        .setDescription('🎵 Play a song from YouTube or SoundCloud')
+        .addStringOption(opt => opt.setName('query').setDescription('Song name or URL').setRequired(true)),
 
     async execute(interaction) {
         const query = interaction.options.getString('query');
@@ -23,49 +24,37 @@ module.exports = {
         await interaction.deferReply();
 
         try {
-            const poru = interaction.client.poru;
-            if (!poru) {
+            const player = useMainPlayer();
+            if (!player) {
                 return interaction.editReply('❌ Music system is not initialized!');
             }
 
-            // Create or get Lavalink player
-            let player = poru.players.get(interaction.guild.id);
-            if (!player) {
-                player = poru.createConnection({
-                    guildId: interaction.guild.id,
-                    voiceChannel: voiceChannel.id,
-                    textChannel: interaction.channel.id,
-                    deaf: true
-                });
-            }
-
-            // Search query (Default to SoundCloud to bypass YouTube blocks unless it's a direct URL)
-            let searchSource = query.startsWith('http') ? undefined : 'scsearch';
-            
             await interaction.editReply(`🔍 Searching for **${query}**...`);
             
-            const resolve = await poru.resolve({ query: query, source: searchSource, requester: interaction.user });
+            const searchResult = await player.search(query, {
+                requestedBy: interaction.user,
+                searchEngine: query.startsWith('http') ? 'auto' : 'soundcloudSearch' // Bypasses YT blocks
+            });
 
-            if (resolve.loadType === 'error' || resolve.loadType === 'empty') {
-                return interaction.editReply('❌ No results found or an error occurred!');
+            if (!searchResult || !searchResult.tracks.length) {
+                return interaction.editReply('❌ No results found!');
             }
 
-            if (resolve.loadType === 'playlist') {
-                for (const track of resolve.tracks) {
-                    track.info.requester = interaction.user;
-                    player.queue.add(track);
+            const { track } = await player.play(voiceChannel, searchResult, {
+                nodeOptions: {
+                    metadata: {
+                        channel: interaction.channel,
+                        client: interaction.client,
+                        guild: interaction.guild
+                    },
+                    leaveOnEmpty: true,
+                    leaveOnEmptyCooldown: 30000,
+                    leaveOnEnd: false
                 }
-                await interaction.editReply(`📋 Added playlist **${resolve.playlistInfo.name}** (${resolve.tracks.length} tracks)!`);
-            } else {
-                const track = resolve.tracks[0];
-                track.info.requester = interaction.user;
-                player.queue.add(track);
-                await interaction.editReply(`📋 Added **${track.info.title}** to queue!`);
-            }
+            });
 
-            if (!player.isPlaying && !player.isPaused) player.play();
+            await interaction.editReply(`📋 Added **${track.title}** to queue!`);
 
-            // Clean up the search reply
             setTimeout(() => {
                 interaction.deleteReply().catch(() => {});
             }, 5000);

@@ -1,23 +1,23 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { useQueue } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('skip')
-        .setDescription('⏭️ Skip to the next song in queue'),
+        .setDescription('⏭️ Skips the current song'),
 
     async execute(interaction) {
-        const player = interaction.client.poru?.players.get(interaction.guildId);
-        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
-
-        try {
-            if (player.queue.length === 0 && player.loop === "NONE") {
-                player.destroy();
-                return interaction.reply('⏹️ No more songs in queue! Stopped.');
-            }
-            player.stop();
-            await interaction.reply('⏭️ Skipped!');
-        } catch (err) {
-            await interaction.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });
+        const queue = useQueue(interaction.guild.id);
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
         }
+
+        const member = interaction.member;
+        if (!member?.voice?.channel || member.voice.channel.id !== queue.channel.id) {
+            return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true });
+        }
+
+        queue.node.skip();
+        await interaction.reply('⏭️ Skipped the current song!');
     },
 };

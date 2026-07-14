@@ -72,8 +72,7 @@ for (const file of commandFiles) {
 const { setupMusicPlayer } = require('./utils/music-player');
 setupMusicPlayer(client);
 
-// Forward raw events to Lavalink client
-client.on("raw", (d) => client.poru?.packetUpdate(d));
+// No raw event needed for discord-player
 
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {

@@ -1,19 +1,23 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { useQueue } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('musicstop')
-        .setDescription('⏹️ Stop the music and disconnect from voice channel'),
+        .setName('stop')
+        .setDescription('⏹️ Stops the music and clears the queue'),
 
     async execute(interaction) {
-        const player = interaction.client.poru?.players.get(interaction.guildId);
-        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
-
-        try {
-            player.destroy();
-            await interaction.reply('⏹️ Music stopped! Disconnected from voice channel. 👋');
-        } catch (err) {
-            await interaction.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });
+        const queue = useQueue(interaction.guild.id);
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
         }
+
+        const member = interaction.member;
+        if (!member?.voice?.channel || member.voice.channel.id !== queue.channel.id) {
+            return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true });
+        }
+
+        queue.delete();
+        await interaction.reply('⏹️ Stopped the music and cleared the queue!');
     },
 };

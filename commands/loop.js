@@ -1,20 +1,46 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { useQueue } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('loop')
-        .setDescription('🔁 Toggle loop mode (Off → Song → Queue)'),
+        .setDescription('🔁 Toggles the loop mode')
+        .addStringOption(opt => opt.setName('mode')
+            .setDescription('Loop mode')
+            .setRequired(true)
+            .addChoices(
+                { name: 'Off', value: 'off' },
+                { name: 'Track', value: 'track' },
+                { name: 'Queue', value: 'queue' }
+            )
+        ),
 
     async execute(interaction) {
-        const player = interaction.client.poru?.players.get(interaction.guildId);
-        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        const modeInput = interaction.options.getString('mode');
+        const queue = useQueue(interaction.guild.id);
+        
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        }
 
-        const loops = ['NONE', 'TRACK', 'QUEUE'];
-        const currentLoop = loops.indexOf(player.loop);
-        const nextLoop = loops[(currentLoop + 1) % 3];
-        player.setLoop(nextLoop);
+        const member = interaction.member;
+        if (!member?.voice?.channel || member.voice.channel.id !== queue.channel.id) {
+            return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true });
+        }
 
-        const displayModes = ['❌ Loop Off', '🔂 Looping Current Song', '🔁 Looping Entire Queue'];
-        await interaction.reply(displayModes[(currentLoop + 1) % 3]);
+        const modes = {
+            'off': 0,
+            'track': 1,
+            'queue': 2
+        };
+
+        const displayModes = {
+            'off': 'Off',
+            'track': '🔂 Song Loop',
+            'queue': '🔁 Queue Loop'
+        };
+
+        queue.setRepeatMode(modes[modeInput]);
+        await interaction.reply(`🔁 Loop set to **${displayModes[modeInput]}**!`);
     },
 };

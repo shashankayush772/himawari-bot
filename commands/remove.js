@@ -1,22 +1,32 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { useQueue } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('remove')
-        .setDescription('🗑️ Remove a song from the queue')
-        .addIntegerOption(opt => opt.setName('position').setDescription('Position of the song in queue (use /queue to check)').setRequired(true).setMinValue(1)),
+        .setDescription('🗑️ Removes a specific track from the queue')
+        .addIntegerOption(opt => opt.setName('position').setDescription('Queue position').setRequired(true)),
 
     async execute(interaction) {
-        const player = interaction.client.poru?.players.get(interaction.guildId);
-        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
-
-        const pos = interaction.options.getInteger('position');
-
-        if (pos > player.queue.length || pos < 1) {
-            return interaction.reply({ content: `❌ Invalid position! Queue only has ${player.queue.length} songs.`, ephemeral: true });
+        const position = interaction.options.getInteger('position');
+        const queue = useQueue(interaction.guild.id);
+        
+        if (!queue || !queue.isPlaying()) {
+            return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
         }
 
-        const removed = player.queue.splice(pos - 1, 1)[0];
-        await interaction.reply(`🗑️ Removed **${removed.info.title}** from the queue!`);
+        const member = interaction.member;
+        if (!member?.voice?.channel || member.voice.channel.id !== queue.channel.id) {
+            return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true });
+        }
+
+        if (position < 1 || position > queue.tracks.size) {
+            return interaction.reply({ content: '❌ Invalid track position!', ephemeral: true });
+        }
+
+        const track = queue.tracks.toArray()[position - 1];
+        queue.removeTrack(track);
+        
+        await interaction.reply(`🗑️ Removed **${track.title}** from the queue!`);
     },
 };
