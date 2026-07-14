@@ -29,14 +29,13 @@ module.exports = {
             guilds247.add(guildId);
 
             // If not already in a VC, join the user's VC
-            const distube = interaction.client.distube;
-            if (distube && !distube.getQueue(guildId)) {
-                const { joinVoiceChannel } = require('@discordjs/voice');
-                joinVoiceChannel({
-                    channelId: voiceChannel.id,
+            const poru = interaction.client.poru;
+            if (poru && !poru.players.get(guildId)) {
+                poru.createConnection({
                     guildId: guildId,
-                    adapterCreator: interaction.guild.voiceAdapterCreator,
-                    selfDeaf: true,
+                    voiceChannel: voiceChannel.id,
+                    textChannel: interaction.channel.id,
+                    deaf: true
                 });
             }
 

@@ -7,62 +7,67 @@ module.exports = {
         .setDescription('📋 Show the current music queue'),
 
     async execute(interaction) {
-        const queue = interaction.client.distube?.getQueue(interaction.guildId);
-        if (!queue) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        const player = interaction.client.poru?.players.get(interaction.guildId);
+        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
 
-        const songs = queue.songs;
-        const current = songs[0];
+        const tracks = [player.currentTrack, ...player.queue];
+        const current = tracks[0];
 
         // Build pages (10 songs per page)
         const pages = [];
         const songsPerPage = 10;
 
-        for (let i = 0; i < songs.length; i += songsPerPage) {
-            const chunk = songs.slice(i, i + songsPerPage);
+        for (let i = 0; i < tracks.length; i += songsPerPage) {
+            const chunk = tracks.slice(i, i + songsPerPage);
             const lines = chunk.map((song, index) => {
                 const pos = i + index;
                 const prefix = pos === 0 ? '▶️' : `**${pos}.**`;
-                const duration = formatDuration(song.duration);
-                const name = song.name.length > 50 ? song.name.substring(0, 47) + '...' : song.name;
-                return `${prefix} [${name}](${song.url}) — \`${duration}\``;
+                const duration = Math.round(song.info.length / 1000);
+                return `${prefix} [${song.info.title}](${song.info.uri}) - \`${formatDuration(duration)}\``;
             });
-            pages.push(lines.join('\n'));
+
+            const embed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setTitle('🎶 Server Music Queue')
+                .setDescription(`**Currently Playing:**\n[${current.info.title}](${current.info.uri})\n\n**Up Next:**\n${lines.slice(1).join('\n') || 'No more songs in queue.'}`)
+                .setFooter({ text: `Page ${Math.floor(i / songsPerPage) + 1} of ${Math.ceil(tracks.length / songsPerPage)} • ${tracks.length - 1} songs in queue` });
+            
+            pages.push(embed);
         }
 
-        let page = 0;
+        if (pages.length === 1) {
+            return interaction.reply({ embeds: [pages[0]] });
+        }
 
-        const makeEmbed = () => new EmbedBuilder()
-            .setColor(0xFF0000)
-            .setAuthor({ name: '📋 Music Queue' })
-            .setTitle(`Now Playing: ${current.name}`)
-            .setDescription(pages[page])
-            .setFooter({ text: `Page ${page + 1}/${pages.length} • ${songs.length} songs • Total: ${formatDuration(queue.duration)}` })
-            .setTimestamp();
+        // Pagination buttons
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('prev_page').setLabel('◀️').setStyle(ButtonStyle.Primary).setDisabled(true),
+            new ButtonBuilder().setCustomId('next_page').setLabel('▶️').setStyle(ButtonStyle.Primary)
+        );
 
-        const makeRow = () => {
-            if (pages.length <= 1) return null;
-            return new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('q_prev').setLabel('◀').setStyle(ButtonStyle.Primary).setDisabled(page === 0),
-                new ButtonBuilder().setCustomId('q_next').setLabel('▶').setStyle(ButtonStyle.Primary).setDisabled(page >= pages.length - 1),
-            );
-        };
+        const message = await interaction.reply({ embeds: [pages[0]], components: [row], fetchReply: true });
 
-        const components = makeRow() ? [makeRow()] : [];
-        const response = await interaction.reply({ embeds: [makeEmbed()], components, fetchReply: true });
+        const collector = message.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
 
-        if (pages.length <= 1) return;
-
-        const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60_000 });
+        let currentPage = 0;
 
         collector.on('collect', async (i) => {
-            if (i.user.id !== interaction.user.id) return i.reply({ content: 'Not your buttons!', ephemeral: true });
-            if (i.customId === 'q_prev') page--;
-            if (i.customId === 'q_next') page++;
-            await i.update({ embeds: [makeEmbed()], components: [makeRow()] });
+            if (i.user.id !== interaction.user.id) {
+                return i.reply({ content: '❌ You cannot use these buttons.', ephemeral: true });
+            }
+
+            if (i.customId === 'prev_page') currentPage--;
+            else if (i.customId === 'next_page') currentPage++;
+
+            row.components[0].setDisabled(currentPage === 0);
+            row.components[1].setDisabled(currentPage === pages.length - 1);
+
+            await i.update({ embeds: [pages[currentPage]], components: [row] });
         });
 
         collector.on('end', () => {
-            response.edit({ components: [] }).catch(() => {});
+            row.components.forEach(c => c.setDisabled(true));
+            message.edit({ components: [row] }).catch(() => {});
         });
     },
 };

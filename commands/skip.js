@@ -6,15 +6,15 @@ module.exports = {
         .setDescription('⏭️ Skip to the next song in queue'),
 
     async execute(interaction) {
-        const queue = interaction.client.distube?.getQueue(interaction.guildId);
-        if (!queue) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        const player = interaction.client.poru?.players.get(interaction.guildId);
+        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
 
         try {
-            if (queue.songs.length <= 1 && queue.repeatMode === 0) {
-                await queue.stop();
+            if (player.queue.length === 0 && player.loop === "NONE") {
+                player.destroy();
                 return interaction.reply('⏹️ No more songs in queue! Stopped.');
             }
-            await queue.skip();
+            player.stop();
             await interaction.reply('⏭️ Skipped!');
         } catch (err) {
             await interaction.reply({ content: `❌ Error: ${err.message}`, ephemeral: true });

@@ -23,55 +23,56 @@ module.exports = {
         await interaction.deferReply();
 
         try {
-            const distube = interaction.client.distube;
-            if (!distube) {
+            const poru = interaction.client.poru;
+            if (!poru) {
                 return interaction.editReply('❌ Music system is not initialized!');
             }
 
+            // Create or get Lavalink player
+            let player = poru.players.get(interaction.guild.id);
+            if (!player) {
+                player = poru.createConnection({
+                    guildId: interaction.guild.id,
+                    voiceChannel: voiceChannel.id,
+                    textChannel: interaction.channel.id,
+                    deaf: true
+                });
+            }
+
+            // Search query (Default to SoundCloud to bypass YouTube blocks unless it's a direct URL)
+            let searchSource = query.startsWith('http') ? undefined : 'scsearch';
+            
             await interaction.editReply(`🔍 Searching for **${query}**...`);
+            
+            const resolve = await poru.resolve(query, searchSource);
 
-            // Check if query is a direct YouTube URL
-            if (query.includes('youtube.com') || query.includes('youtu.be')) {
-                await interaction.editReply(`⚠️ **Note:** YouTube is aggressively blocking cloud bots right now. If it fails, try searching the song name instead!`);
+            if (resolve.loadType === 'error' || resolve.loadType === 'empty') {
+                return interaction.editReply('❌ No results found or an error occurred!');
             }
 
-            let finalQuery = query;
-
-            // If it's a plain text search, use DisTube's SoundCloud plugin to bypass YouTube 429 bans
-            if (!query.startsWith('http')) {
-                try {
-                    const scPlugin = distube.plugins.find(p => p.constructor.name === 'SoundCloudPlugin');
-                    if (scPlugin) {
-                        const results = await scPlugin.search(query);
-                        if (results && results.length > 0) {
-                            finalQuery = results[0].url;
-                            await interaction.editReply(`🔍 Found on SoundCloud: **${results[0].name}**`);
-                        }
-                    }
-                } catch (scErr) {
-                    console.error('SoundCloud search error:', scErr);
-                    // If SoundCloud search fails, we'll just fall back to passing the raw query to DisTube
+            if (resolve.loadType === 'playlist') {
+                for (const track of resolve.tracks) {
+                    track.info.requester = interaction.user;
+                    player.queue.add(track);
                 }
+                await interaction.editReply(`📋 Added playlist **${resolve.playlistInfo.name}** (${resolve.tracks.length} tracks)!`);
+            } else {
+                const track = resolve.tracks[0];
+                track.info.requester = interaction.user;
+                player.queue.add(track);
+                await interaction.editReply(`📋 Added **${track.info.title}** to queue!`);
             }
 
-            await distube.play(voiceChannel, finalQuery, {
-                textChannel: interaction.channel,
-                member: interaction.member,
-            });
+            if (!player.isPlaying && !player.isPaused) player.play();
 
+            // Clean up the search reply
             setTimeout(() => {
                 interaction.deleteReply().catch(() => {});
             }, 5000);
 
         } catch (err) {
             console.error('  ❌ [MUSIC] Play error:', err.message);
-            if (err.message.includes('429') || err.message.includes('Sign in to confirm')) {
-                await interaction.editReply(`❌ **YouTube Blocked Us!** (Bot Protection). Please search by song name instead of a YouTube link so I can play it from SoundCloud. 🎵`);
-            } else {
-                // Truncate the huge yt-dlp python warnings if present
-                const cleanError = err.message.split('ERROR:')[1]?.trim() || err.message.substring(0, 150);
-                await interaction.editReply(`❌ Could not play: ${cleanError}`);
-            }
+            await interaction.editReply(`❌ Could not play: ${err.message}`);
         }
     },
 };

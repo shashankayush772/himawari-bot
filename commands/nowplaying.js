@@ -7,10 +7,24 @@ module.exports = {
         .setDescription('🎵 Show the current playing song with controls'),
 
     async execute(interaction) {
-        const queue = interaction.client.distube?.getQueue(interaction.guildId);
-        if (!queue) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        const player = interaction.client.poru?.players.get(interaction.guildId);
+        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
 
-        const song = queue.songs[0];
+        const track = player.currentTrack;
+        const song = {
+            name: track.info.title,
+            url: track.info.uri,
+            thumbnail: track.info.image || `https://img.youtube.com/vi/${track.info.identifier}/hqdefault.jpg`,
+            duration: Math.round(track.info.length / 1000),
+            user: track.info.requester || null
+        };
+        const queue = {
+            currentTime: 0,
+            volume: player.volume,
+            repeatMode: player.loop === 'NONE' ? 0 : player.loop === 'TRACK' ? 1 : 2,
+            songs: [song, ...player.queue],
+            paused: player.isPaused
+        };
         const msg = buildNowPlayingMessage(queue, song);
         await interaction.reply(msg);
     },

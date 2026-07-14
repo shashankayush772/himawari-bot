@@ -93,121 +93,85 @@ function buildNowPlayingMessage(queue, song) {
     return { embeds: [embed], components: [filterRow, row1, row2] };
 }
 
-// ── Initialize DisTube on the client ──
+const { Poru } = require('poru');
+
+// ── Initialize Poru on the client ──
 function setupMusicPlayer(client) {
-    const ffmpegPath = require('ffmpeg-static');
-    const { YtDlpPlugin } = require('@distube/yt-dlp');
-    const { SoundCloudPlugin } = require('@distube/soundcloud');
-
-    const distube = new DisTube(client, {
-        emitNewSongOnly: true,
-        emitAddSongWhenCreatingQueue: false,
-        emitAddListWhenCreatingQueue: false,
-        ffmpeg: {
-            path: ffmpegPath
+    const nodes = [
+        {
+            name: 'jiryu',
+            host: 'lavalink.jiryu.net',
+            port: 1337,
+            password: 'youshallnotpass'
         },
-        plugins: [
-            new SoundCloudPlugin(),
-            new YtDlpPlugin({ update: true }) // Use yt-dlp exclusively to bypass YouTube IP blocks
-        ]
+        {
+            name: 'kashira',
+            host: 'node1.kashira.xyz',
+            port: 80,
+            password: 'kashira.xyz'
+        }
+    ];
+
+    const poru = new Poru(client, nodes, {
+        spotify: {
+            playlistLimit: 2
+        }
     });
 
-    client.distube = distube;
+    client.poru = poru;
 
-    // ── DisTube Events ──
+    // ── Poru Events ──
 
-    distube.on('playSong', (queue, song) => {
+    poru.on('nodeConnect', (node) => {
+        console.log(`  ✅ [LAVALINK] Connected to Node: ${node.name}`);
+    });
+
+    poru.on('nodeError', (node, error) => {
+        console.error(`  ❌ [LAVALINK] Node ${node.name} Error:`, error.message);
+    });
+
+    poru.on('trackStart', (player, track) => {
+        // Need to simulate a song object for the buildNowPlayingMessage
+        const song = {
+            name: track.info.title,
+            url: track.info.uri,
+            thumbnail: track.info.image || `https://img.youtube.com/vi/${track.info.identifier}/hqdefault.jpg`,
+            duration: Math.round(track.info.length / 1000), // milliseconds to seconds
+            user: track.info.requester || null
+        };
+        
+        // Map player to queue
+        const queue = {
+            currentTime: 0,
+            volume: player.volume,
+            repeatMode: player.loop === 'NONE' ? 0 : player.loop === 'TRACK' ? 1 : 2,
+            songs: [song, ...player.queue],
+            paused: player.isPaused
+        };
+
         const msg = buildNowPlayingMessage(queue, song);
-        queue.textChannel?.send(msg).catch(() => {});
+        const channel = client.channels.cache.get(player.textChannel);
+        if (channel) channel.send(msg).catch(() => {});
 
-        // Set VC status to show current song
-        setVoiceStatus(client, queue.voiceChannel?.id, `🎵 ${song.name?.substring(0, 45) || 'Playing music'}`);
+        // Set VC status
+        setVoiceStatus(client, player.voiceChannel, `🎵 ${song.name.substring(0, 45) || 'Playing music'}`);
     });
 
-    distube.on('addSong', (queue, song) => {
-        const embed = new EmbedBuilder()
-            .setColor(0x57F287)
-            .setAuthor({ name: '📋 Added to Queue' })
-            .setTitle(song.name || 'Unknown')
-            .setURL(song.url)
-            .setThumbnail(song.thumbnail)
-            .addFields(
-                { name: '⏱️ Duration', value: formatDuration(song.duration), inline: true },
-                { name: '📋 Position', value: `#${queue.songs.length}`, inline: true },
-            )
-            .setFooter({ text: `Requested by ${song.user?.globalName || song.user?.username || 'Unknown'}` });
-
-        queue.textChannel?.send({ embeds: [embed] }).catch(() => {});
-    });
-
-    distube.on('addList', (queue, playlist) => {
-        const embed = new EmbedBuilder()
-            .setColor(0x57F287)
-            .setAuthor({ name: '📋 Added Playlist to Queue' })
-            .setTitle(playlist.name || 'Unknown Playlist')
-            .setURL(playlist.url)
-            .setThumbnail(playlist.thumbnail)
-            .addFields(
-                { name: '🎵 Songs', value: `${playlist.songs.length}`, inline: true },
-                { name: '⏱️ Duration', value: formatDuration(playlist.duration), inline: true },
-            )
-            .setFooter({ text: `Requested by ${playlist.songs[0]?.user?.globalName || 'Unknown'}` });
-
-        queue.textChannel?.send({ embeds: [embed] }).catch(() => {});
-    });
-
-    distube.on('finish', (queue) => {
-        const embed = new EmbedBuilder()
-            .setColor(0xED4245)
-            .setDescription('🏁 Queue finished! Add more songs or I\'ll leave in 30 seconds.');
-
-        queue.textChannel?.send({ embeds: [embed] }).catch(() => {});
-        setVoiceStatus(client, queue.voiceChannel?.id, '');
-    });
-
-    distube.on('disconnect', (queue) => {
-        const embed = new EmbedBuilder()
-            .setColor(0xED4245)
-            .setDescription('👋 Disconnected from voice channel. See you next time!');
-
-        queue.textChannel?.send({ embeds: [embed] }).catch(() => {});
-        setVoiceStatus(client, queue.voiceChannel?.id, '');
-    });
-
-    distube.on('error', (error, queue) => {
-        console.error('  ❌ [MUSIC] DisTube error:', error.message || error);
-        if (queue && queue.textChannel) {
+    poru.on('queueEnd', (player) => {
+        const channel = client.channels.cache.get(player.textChannel);
+        if (channel) {
             const embed = new EmbedBuilder()
                 .setColor(0xED4245)
-                .setDescription(`❌ Music error: ${error.message || 'Unknown error'}`);
-            queue.textChannel.send({ embeds: [embed] }).catch(() => {});
+                .setDescription('🏁 Queue finished! Add more songs or I\'ll leave in 30 seconds.');
+            channel.send({ embeds: [embed] }).catch(() => {});
         }
-    });
-
-    distube.on('debug', (message) => {
-        console.log(`[DisTube Debug]: ${message}`);
-    });
-
-    distube.on('ffmpegDebug', (message) => {
-        console.log(`[FFmpeg Debug]: ${message}`);
-    });
-
-    distube.on('empty', (queue) => {
-        // Check if 24/7 mode is enabled for this guild
-        const cmd247 = client.commands?.get('247');
-        if (cmd247 && cmd247.is247Enabled(queue.id)) {
-            const embed = new EmbedBuilder()
-                .setColor(0x57F287)
-                .setDescription('📭 Voice channel is empty, but **24/7 mode** is on — I\'m staying! 🔄');
-            queue.textChannel?.send({ embeds: [embed] }).catch(() => {});
-            return; // Don't leave
-        }
-
-        const embed = new EmbedBuilder()
-            .setColor(0xFEE75C)
-            .setDescription('📭 Voice channel is empty! Leaving in 30 seconds...');
-
-        queue.textChannel?.send({ embeds: [embed] }).catch(() => {});
+        
+        setVoiceStatus(client, player.voiceChannel, '');
+        
+        // Instead of leaving immediately, we could wait, but for now we just destroy
+        setTimeout(() => {
+            if (!player.isPlaying) player.destroy();
+        }, 30000);
     });
 
     // ── Handle Button Interactions ──
@@ -215,15 +179,14 @@ function setupMusicPlayer(client) {
         if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
         if (!interaction.customId.startsWith('music_')) return;
 
-        const queue = distube.getQueue(interaction.guildId);
+        const player = poru.players.get(interaction.guildId);
 
-        if (!queue) {
+        if (!player) {
             return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true }).catch(() => {});
         }
 
-        // Check if user is in the same voice channel
         const member = interaction.member;
-        if (!member?.voice?.channel || member.voice.channel.id !== queue.voiceChannel?.id) {
+        if (!member?.voice?.channel || member.voice.channel.id !== player.voiceChannel) {
             return interaction.reply({ content: '❌ You need to be in the same voice channel!', ephemeral: true }).catch(() => {});
         }
 
@@ -232,76 +195,81 @@ function setupMusicPlayer(client) {
             if (interaction.isStringSelectMenu() && interaction.customId === 'music_filter') {
                 const filter = interaction.values[0];
                 if (filter === 'clear') {
-                    if (queue.filters.names.length > 0) {
-                        await queue.filters.clear();
-                    }
+                    player.filters.clearFilters();
                     return interaction.reply({ content: '🎛️ All filters cleared!', ephemeral: true });
                 }
-                if (queue.filters.has(filter)) {
-                    await queue.filters.remove(filter);
-                    return interaction.reply({ content: `🎛️ Filter **${filter}** removed!`, ephemeral: true });
-                } else {
-                    await queue.filters.add(filter);
-                    return interaction.reply({ content: `🎛️ Filter **${filter}** applied!`, ephemeral: true });
+                
+                // Extremely simple filter mapping for Poru
+                if (filter === 'bassboost') {
+                    player.filters.setEqualizer([{ band: 0, gain: 0.6 }, { band: 1, gain: 0.67 }, { band: 2, gain: 0.67 }, { band: 3, gain: 0.4 }, { band: 4, gain: 0.15 }]);
+                } else if (filter === 'nightcore') {
+                    player.filters.setTimescale({ speed: 1.2, pitch: 1.2, rate: 1.0 });
+                } else if (filter === 'vaporwave') {
+                    player.filters.setTimescale({ speed: 0.8, pitch: 0.8, rate: 1.0 });
+                } else if (filter === '3d') {
+                    player.filters.setRotation({ rotationHz: 0.2 });
+                } else if (filter === 'karaoke') {
+                    player.filters.setKaraoke({ level: 1.0, monoLevel: 1.0, filterBand: 220, filterWidth: 100 });
+                } else if (filter === 'earrape') {
+                    player.setVolume(500);
+                    player.filters.setEqualizer([...Array(15).keys()].map(i => ({ band: i, gain: 0.5 })));
+                } else if (filter === 'tremolo') {
+                    player.filters.setTremolo({ frequency: 2.0, depth: 0.5 });
                 }
+                
+                return interaction.reply({ content: `🎛️ Filter **${filter}** applied!`, ephemeral: true });
             }
 
             // ── Button Controls ──
             switch (interaction.customId) {
                 case 'music_previous':
-                    if (queue.previousSongs.length === 0) {
-                        return interaction.reply({ content: '❌ No previous song!', ephemeral: true });
+                    if (player.previousTrack) {
+                        player.queue.unshift(player.previousTrack);
+                        player.stop();
+                        await interaction.reply({ content: '⏮️ Playing previous song!', ephemeral: true });
+                    } else {
+                        await interaction.reply({ content: '❌ No previous song!', ephemeral: true });
                     }
-                    await queue.previous();
-                    await interaction.reply({ content: '⏮️ Playing previous song!', ephemeral: true });
                     break;
 
                 case 'music_pause':
-                    if (queue.paused) {
-                        queue.resume();
-                        await interaction.reply({ content: '▶️ Resumed!', ephemeral: true });
-                    } else {
-                        queue.pause();
-                        await interaction.reply({ content: '⏸️ Paused!', ephemeral: true });
-                    }
+                    player.pause(!player.isPaused);
+                    await interaction.reply({ content: player.isPaused ? '⏸️ Paused!' : '▶️ Resumed!', ephemeral: true });
                     break;
 
                 case 'music_shuffle':
-                    await queue.shuffle();
+                    player.queue.shuffle();
                     await interaction.reply({ content: '🔀 Queue shuffled!', ephemeral: true });
                     break;
 
                 case 'music_skip':
-                    if (queue.songs.length <= 1 && queue.repeatMode === 0) {
-                        await queue.stop();
-                        await interaction.reply({ content: '⏹️ No more songs! Stopped.', ephemeral: true });
-                    } else {
-                        await queue.skip();
-                        await interaction.reply({ content: '⏭️ Skipped!', ephemeral: true });
-                    }
+                    player.stop();
+                    await interaction.reply({ content: '⏭️ Skipped!', ephemeral: true });
                     break;
 
                 case 'music_loop':
-                    const newMode = (queue.repeatMode + 1) % 3;
-                    queue.setRepeatMode(newMode);
-                    const modes = ['Off', '🔂 Song Loop', '🔁 Queue Loop'];
-                    await interaction.reply({ content: `🔁 Loop: **${modes[newMode]}**`, ephemeral: true });
+                    const loops = ['NONE', 'TRACK', 'QUEUE'];
+                    const currentLoop = loops.indexOf(player.loop);
+                    const nextLoop = loops[(currentLoop + 1) % 3];
+                    player.setLoop(nextLoop);
+                    const displayModes = ['Off', '🔂 Song Loop', '🔁 Queue Loop'];
+                    await interaction.reply({ content: `🔁 Loop: **${displayModes[(currentLoop + 1) % 3]}**`, ephemeral: true });
                     break;
 
                 case 'music_voldown':
-                    const downVol = Math.max(0, queue.volume - 10);
-                    queue.setVolume(downVol);
+                    const downVol = Math.max(0, player.volume - 10);
+                    player.setVolume(downVol);
                     await interaction.reply({ content: `🔉 Volume: **${downVol}%**`, ephemeral: true });
                     break;
 
                 case 'music_volup':
-                    const upVol = Math.min(100, queue.volume + 10);
-                    queue.setVolume(upVol);
+                    const upVol = Math.min(100, player.volume + 10);
+                    player.setVolume(upVol);
                     await interaction.reply({ content: `🔊 Volume: **${upVol}%**`, ephemeral: true });
                     break;
 
                 case 'music_stop':
-                    await queue.stop();
+                    player.destroy();
                     await interaction.reply({ content: '⏹️ Stopped and disconnected!', ephemeral: true });
                     break;
             }
@@ -311,8 +279,8 @@ function setupMusicPlayer(client) {
         }
     });
 
-    console.log('  ✅ [MUSIC] DisTube music player initialized!');
-    return distube;
+    console.log('  ✅ [MUSIC] Poru Lavalink music player initialized!');
+    return poru;
 }
 
 module.exports = { setupMusicPlayer, buildNowPlayingMessage, formatDuration, createProgressBar };
