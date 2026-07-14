@@ -53,10 +53,12 @@ module.exports = {
 
         } catch (err) {
             console.error('  ❌ [MUSIC] Play error:', err.message);
-            if (err.message.includes('429')) {
-                await interaction.editReply(`❌ **YouTube Blocked Us!** (Error 429). Please search by song name instead of a YouTube link! 🎵`);
+            if (err.message.includes('429') || err.message.includes('Sign in to confirm')) {
+                await interaction.editReply(`❌ **YouTube Blocked Us!** (Bot Protection). Please search by song name instead of a YouTube link so I can play it from SoundCloud. 🎵`);
             } else {
-                await interaction.editReply(`❌ Could not play: ${err.message}`);
+                // Truncate the huge yt-dlp python warnings if present
+                const cleanError = err.message.split('ERROR:')[1]?.trim() || err.message.substring(0, 150);
+                await interaction.editReply(`❌ Could not play: ${cleanError}`);
             }
         }
     },
