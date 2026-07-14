@@ -97,21 +97,16 @@ const { Poru } = require('poru');
 // ── Initialize Poru on the client ──
 function setupMusicPlayer(client) {
     const nodes = [
-        {
-            name: 'jiryu',
-            host: 'lavalink.jiryu.net',
-            port: 1337,
-            password: 'youshallnotpass'
-        },
-        {
-            name: 'kashira',
-            host: 'node1.kashira.xyz',
-            port: 80,
-            password: 'kashira.xyz'
-        }
+        { name: 'Public Node 1', host: 'lava-v3.ajieblogs.eu.org', port: 443, password: 'https://dsc.gg/ajidevserver', secure: true },
+        { name: 'Public Node 2', host: 'lavalink.oops.wtf', port: 443, password: 'www.freelavalink.rest', secure: true },
+        { name: 'Public Node 3', host: 'lava.link', port: 80, password: 'anything', secure: false },
+        { name: 'Public Node 4', host: 'lavalink.kohi.dev', port: 443, password: 'kohi', secure: true },
+        { name: 'Public Node 5', host: 'node.lavalink.wtf', port: 443, password: 'www.freelavalink.rest', secure: true }
     ];
 
     const poru = new Poru(client, nodes, {
+        reconnectTries: 10,
+        reconnectTimeout: 10000,
         spotify: {
             playlistLimit: 2
         }

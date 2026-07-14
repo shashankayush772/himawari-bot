@@ -44,7 +44,7 @@ module.exports = {
             
             await interaction.editReply(`🔍 Searching for **${query}**...`);
             
-            const resolve = await poru.resolve(query, searchSource);
+            const resolve = await poru.resolve({ query: query, source: searchSource, requester: interaction.user });
 
             if (resolve.loadType === 'error' || resolve.loadType === 'empty') {
                 return interaction.editReply('❌ No results found or an error occurred!');
