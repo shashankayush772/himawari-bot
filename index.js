@@ -68,9 +68,12 @@ for (const file of commandFiles) {
     }
 }
 
-// ── Initialize DisTube Music Player ──
+// ── Initialize Lavalink Music Player ──
 const { setupMusicPlayer } = require('./utils/music-player');
 setupMusicPlayer(client);
+
+// Forward raw events to Lavalink client
+client.on("raw", (d) => client.poru?.serverUpdate(d));
 
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -362,6 +365,9 @@ client.once(Events.ClientReady, (c) => {
     console.log(`  📡 Servers: ${c.guilds.cache.size}`);
     console.log(`  📝 Commands: ${c.commands.size}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Initialize Poru Lavalink Client
+    c.poru?.init(c);
 
     // Start YouTube Live stream monitor
     startYouTubeLiveMonitor(c);
