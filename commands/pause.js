@@ -6,14 +6,14 @@ module.exports = {
         .setDescription('⏸️ Pause the current song'),
 
     async execute(interaction) {
-        const queue = interaction.client.distube?.getQueue(interaction.guildId);
-        if (!queue) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
+        const player = interaction.client.poru?.players.get(interaction.guildId);
+        if (!player) return interaction.reply({ content: '❌ Nothing is playing right now!', ephemeral: true });
 
-        if (queue.paused) {
+        if (player.isPaused) {
             return interaction.reply({ content: '⚠️ Already paused! Use `/resume` to continue.', ephemeral: true });
         }
 
-        queue.pause();
+        player.pause(true);
         await interaction.reply('⏸️ Paused the music!');
     },
 };

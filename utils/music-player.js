@@ -1,5 +1,4 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
-const DisTube = require('distube').default;
 const { joinVoiceChannel } = require('@discordjs/voice');
 
 // ── Set Voice Channel Status (shows current song in VC) ──
