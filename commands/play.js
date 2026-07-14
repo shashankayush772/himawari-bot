@@ -37,9 +37,21 @@ module.exports = {
 
             let finalQuery = query;
 
-            // If it's a plain text search, use DisTube's native SoundCloud plugin to bypass YouTube 429 bans
+            // If it's a plain text search, use DisTube's SoundCloud plugin to bypass YouTube 429 bans
             if (!query.startsWith('http')) {
-                finalQuery = `scsearch:${query}`;
+                try {
+                    const scPlugin = distube.plugins.find(p => p.constructor.name === 'SoundCloudPlugin');
+                    if (scPlugin) {
+                        const results = await scPlugin.search(query);
+                        if (results && results.length > 0) {
+                            finalQuery = results[0].url;
+                            await interaction.editReply(`🔍 Found on SoundCloud: **${results[0].name}**`);
+                        }
+                    }
+                } catch (scErr) {
+                    console.error('SoundCloud search error:', scErr);
+                    // If SoundCloud search fails, we'll just fall back to passing the raw query to DisTube
+                }
             }
 
             await distube.play(voiceChannel, finalQuery, {
