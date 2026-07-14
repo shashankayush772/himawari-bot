@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "^0.19.2",
+    "@distube/ytdl-core": "^4.16.12",
     "@iamtraction/google-translate": "^2.0.1",
     "@napi-rs/canvas": "^0.1.65",
     "axios": "^1.7.9",
