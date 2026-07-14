@@ -96,6 +96,7 @@ function buildNowPlayingMessage(queue, song) {
 // ── Initialize DisTube on the client ──
 function setupMusicPlayer(client) {
     const ffmpegPath = require('ffmpeg-static');
+    const { YouTubePlugin } = require('@distube/youtube');
 
     const distube = new DisTube(client, {
         emitNewSongOnly: true,
@@ -103,7 +104,10 @@ function setupMusicPlayer(client) {
         emitAddListWhenCreatingQueue: false,
         ffmpeg: {
             path: ffmpegPath
-        }
+        },
+        plugins: [
+            new YouTubePlugin()
+        ]
     });
 
     client.distube = distube;
