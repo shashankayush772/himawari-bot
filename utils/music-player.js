@@ -96,7 +96,6 @@ function buildNowPlayingMessage(queue, song) {
 // ── Initialize DisTube on the client ──
 function setupMusicPlayer(client) {
     const ffmpegPath = require('ffmpeg-static');
-    const { YouTubePlugin } = require('@distube/youtube');
     const { YtDlpPlugin } = require('@distube/yt-dlp');
 
     const distube = new DisTube(client, {
@@ -107,8 +106,7 @@ function setupMusicPlayer(client) {
             path: ffmpegPath
         },
         plugins: [
-            new YouTubePlugin(),
-            new YtDlpPlugin({ update: true }) // Automatically updates yt-dlp to bypass 429
+            new YtDlpPlugin({ update: true }) // Use yt-dlp exclusively to bypass YouTube IP blocks
         ]
     });
 
@@ -174,13 +172,13 @@ function setupMusicPlayer(client) {
         setVoiceStatus(client, queue.voiceChannel?.id, '');
     });
 
-    distube.on('error', (channel, error) => {
-        console.error('  ❌ [MUSIC] DisTube error:', error.message);
-        if (channel) {
+    distube.on('error', (error, queue) => {
+        console.error('  ❌ [MUSIC] DisTube error:', error.message || error);
+        if (queue && queue.textChannel) {
             const embed = new EmbedBuilder()
                 .setColor(0xED4245)
-                .setDescription(`❌ Music error: ${error.message}`);
-            channel.send({ embeds: [embed] }).catch(() => {});
+                .setDescription(`❌ Music error: ${error.message || 'Unknown error'}`);
+            queue.textChannel.send({ embeds: [embed] }).catch(() => {});
         }
     });
 

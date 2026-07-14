@@ -28,21 +28,44 @@ module.exports = {
                 return interaction.editReply('❌ Music system is not initialized!');
             }
 
-            await distube.play(voiceChannel, query, {
+            await interaction.editReply(`🔍 Searching for **${query}**...`);
+
+            // Check if query is a direct YouTube URL
+            if (query.includes('youtube.com') || query.includes('youtu.be')) {
+                await interaction.editReply(`⚠️ **Note:** YouTube is aggressively blocking cloud bots right now. If it fails, try searching the song name instead!`);
+            }
+
+            let finalQuery = query;
+
+            // If it's a plain text search, use play-dl to search SoundCloud to bypass YouTube 429 bans
+            if (!query.startsWith('http')) {
+                const play = require('play-dl');
+                const searchResults = await play.search(query, { limit: 1, source: { soundcloud: 'tracks' } });
+                
+                if (searchResults && searchResults.length > 0) {
+                    finalQuery = searchResults[0].url;
+                    await interaction.editReply(`🔍 Found on SoundCloud: **${searchResults[0].name}**`);
+                } else {
+                    return interaction.editReply(`❌ Could not find any song matching **${query}** on SoundCloud.`);
+                }
+            }
+
+            await distube.play(voiceChannel, finalQuery, {
                 textChannel: interaction.channel,
                 member: interaction.member,
             });
 
-            await interaction.editReply(`🔍 Searching for **${query}**...`);
-
-            // Auto-delete the search message after 5 seconds
             setTimeout(() => {
                 interaction.deleteReply().catch(() => {});
             }, 5000);
 
         } catch (err) {
             console.error('  ❌ [MUSIC] Play error:', err.message);
-            await interaction.editReply(`❌ Could not play: ${err.message}`);
+            if (err.message.includes('429')) {
+                await interaction.editReply(`❌ **YouTube Blocked Us!** (Error 429). Please search by song name instead of a YouTube link, and I will play it from SoundCloud. 🎵`);
+            } else {
+                await interaction.editReply(`❌ Could not play: ${err.message}`);
+            }
         }
     },
 };
