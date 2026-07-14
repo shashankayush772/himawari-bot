@@ -97,6 +97,7 @@ function buildNowPlayingMessage(queue, song) {
 function setupMusicPlayer(client) {
     const ffmpegPath = require('ffmpeg-static');
     const { YtDlpPlugin } = require('@distube/yt-dlp');
+    const { SoundCloudPlugin } = require('@distube/soundcloud');
 
     const distube = new DisTube(client, {
         emitNewSongOnly: true,
@@ -106,6 +107,7 @@ function setupMusicPlayer(client) {
             path: ffmpegPath
         },
         plugins: [
+            new SoundCloudPlugin(),
             new YtDlpPlugin({ update: true }) // Use yt-dlp exclusively to bypass YouTube IP blocks
         ]
     });

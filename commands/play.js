@@ -37,17 +37,9 @@ module.exports = {
 
             let finalQuery = query;
 
-            // If it's a plain text search, use play-dl to search SoundCloud to bypass YouTube 429 bans
+            // If it's a plain text search, use DisTube's native SoundCloud plugin to bypass YouTube 429 bans
             if (!query.startsWith('http')) {
-                const play = require('play-dl');
-                const searchResults = await play.search(query, { limit: 1, source: { soundcloud: 'tracks' } });
-                
-                if (searchResults && searchResults.length > 0) {
-                    finalQuery = searchResults[0].url;
-                    await interaction.editReply(`🔍 Found on SoundCloud: **${searchResults[0].name}**`);
-                } else {
-                    return interaction.editReply(`❌ Could not find any song matching **${query}** on SoundCloud.`);
-                }
+                finalQuery = `scsearch:${query}`;
             }
 
             await distube.play(voiceChannel, finalQuery, {
@@ -62,7 +54,7 @@ module.exports = {
         } catch (err) {
             console.error('  ❌ [MUSIC] Play error:', err.message);
             if (err.message.includes('429')) {
-                await interaction.editReply(`❌ **YouTube Blocked Us!** (Error 429). Please search by song name instead of a YouTube link, and I will play it from SoundCloud. 🎵`);
+                await interaction.editReply(`❌ **YouTube Blocked Us!** (Error 429). Please search by song name instead of a YouTube link! 🎵`);
             } else {
                 await interaction.editReply(`❌ Could not play: ${err.message}`);
             }
