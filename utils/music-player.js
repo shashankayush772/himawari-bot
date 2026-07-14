@@ -3,6 +3,10 @@ const { DefaultExtractors } = require('@discord-player/extractor');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 function setupMusicPlayer(client) {
+    // Force discord-player to use play-dl and ffmpeg-static for maximum reliability
+    process.env.DP_FORCE_YTDL_MOD = "play-dl";
+    process.env.FFMPEG_PATH = require('ffmpeg-static');
+
     // Initialize Discord-Player
     const player = new Player(client, {
         ytdlOptions: {
@@ -32,6 +36,14 @@ function setupMusicPlayer(client) {
 
     player.events.on('error', (queue, error) => {
         console.error(`  ❌ [MUSIC] Queue Error:`, error.message);
+    });
+
+    player.on('debug', (message) => {
+        console.log(`  🐛 [MUSIC DEBUG] ${message}`);
+    });
+
+    player.events.on('debug', (queue, message) => {
+        console.log(`  🐛 [QUEUE DEBUG] ${message}`);
     });
 
     player.events.on('emptyQueue', (queue) => {
