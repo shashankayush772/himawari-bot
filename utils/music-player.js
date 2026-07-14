@@ -97,6 +97,7 @@ function buildNowPlayingMessage(queue, song) {
 function setupMusicPlayer(client) {
     const ffmpegPath = require('ffmpeg-static');
     const { YouTubePlugin } = require('@distube/youtube');
+    const { YtDlpPlugin } = require('@distube/yt-dlp');
 
     const distube = new DisTube(client, {
         emitNewSongOnly: true,
@@ -106,7 +107,8 @@ function setupMusicPlayer(client) {
             path: ffmpegPath
         },
         plugins: [
-            new YouTubePlugin()
+            new YouTubePlugin(),
+            new YtDlpPlugin({ update: true }) // Automatically updates yt-dlp to bypass 429
         ]
     });
 
