@@ -184,6 +184,14 @@ function setupMusicPlayer(client) {
         }
     });
 
+    distube.on('debug', (message) => {
+        console.log(`[DisTube Debug]: ${message}`);
+    });
+
+    distube.on('ffmpegDebug', (message) => {
+        console.log(`[FFmpeg Debug]: ${message}`);
+    });
+
     distube.on('empty', (queue) => {
         // Check if 24/7 mode is enabled for this guild
         const cmd247 = client.commands?.get('247');
