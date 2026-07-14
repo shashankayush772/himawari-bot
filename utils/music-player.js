@@ -95,7 +95,7 @@ function buildNowPlayingMessage(queue, song) {
 
 // ── Initialize DisTube on the client ──
 function setupMusicPlayer(client) {
-    const ffmpegPath = require('ffmpeg-static');
+    const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
     const { YtDlpPlugin } = require('@distube/yt-dlp');
     const { SoundCloudPlugin } = require('@distube/soundcloud');
 
