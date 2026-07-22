@@ -5,8 +5,6 @@ const { spawn } = require('child_process');
     console.log('  🚀 Himawari Bot Launcher');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // Music uses discord-player with SoundCloud/Spotify extractors
-    console.log('  🎵 Using discord-player with SoundCloud + Spotify extractors\n');
 
     // Step 1: Deploy commands
     console.log('  📦 Deploying commands...');

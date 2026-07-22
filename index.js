@@ -68,10 +68,6 @@ for (const file of commandFiles) {
     }
 }
 
-// ── Initialize Music Player ──
-const { setupMusicPlayer } = require('./utils/music-player');
-setupMusicPlayer(client);
-
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
     // ── Honeypot Statistics Popup ──
