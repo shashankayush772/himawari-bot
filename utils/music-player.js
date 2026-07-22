@@ -10,8 +10,13 @@ const {
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 function setupMusicPlayer(client) {
-    // Initialize Discord-Player (no ytdlOptions — that was a v6 thing)
-    const player = new Player(client);
+    // Initialize Discord-Player
+    // CRITICAL: skipFFmpeg defaults to true in discord-player v7, which sends
+    // raw MP3/HLS streams directly to Discord. Discord requires Opus audio.
+    // Without FFmpeg transcoding, the player goes idle after ~120ms.
+    const player = new Player(client, {
+        skipFFmpeg: false
+    });
 
     // ── Register extractors MANUALLY (DefaultExtractors is broken — returns nulls) ──
     (async () => {
