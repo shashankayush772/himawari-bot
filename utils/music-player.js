@@ -10,6 +10,8 @@ const {
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 function setupMusicPlayer(client) {
+    require('./ffmpeg-logger'); // Inject stderr logger
+
     // Initialize Discord-Player
     // CRITICAL: skipFFmpeg defaults to true in discord-player v7, which sends
     // raw MP3/HLS streams directly to Discord. Discord requires Opus audio.
