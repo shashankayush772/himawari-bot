@@ -68,11 +68,9 @@ for (const file of commandFiles) {
     }
 }
 
-// ── Initialize Lavalink Music Player ──
+// ── Initialize Music Player ──
 const { setupMusicPlayer } = require('./utils/music-player');
 setupMusicPlayer(client);
-
-// No raw event needed for discord-player
 
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -365,8 +363,7 @@ client.once(Events.ClientReady, (c) => {
     console.log(`  📝 Commands: ${c.commands.size}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    // Initialize Poru Lavalink Client
-    c.poru?.init(c);
+
 
     // Start YouTube Live stream monitor
     startYouTubeLiveMonitor(c);

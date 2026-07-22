@@ -5,8 +5,8 @@ const { spawn } = require('child_process');
     console.log('  🚀 Himawari Bot Launcher');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // Lavalink is now external — no Java needed
-    console.log('  🎵 Using external Lavalink nodes (no local Java required)\n');
+    // Music uses discord-player with SoundCloud/Spotify extractors
+    console.log('  🎵 Using discord-player with SoundCloud + Spotify extractors\n');
 
     // Step 1: Deploy commands
     console.log('  📦 Deploying commands...');

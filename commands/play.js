@@ -1,10 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { useMainPlayer } = require('discord-player');
+const { useMainPlayer, QueryType } = require('discord-player');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('play')
-        .setDescription('🎵 Play a song from YouTube or SoundCloud')
+        .setDescription('🎵 Play a song from SoundCloud, Spotify, or a URL')
         .addStringOption(opt => opt.setName('query').setDescription('Song name or URL').setRequired(true)),
 
     async execute(interaction) {
@@ -29,16 +29,26 @@ module.exports = {
                 return interaction.editReply('❌ Music system is not initialized!');
             }
 
+            // Check if any extractors are loaded
+            if (player.extractors.size === 0) {
+                return interaction.editReply('❌ No music extractors are loaded! The bot needs to be restarted.');
+            }
+
             await interaction.editReply(`🔍 Searching for **${query}**...`);
+            
+            // Determine search type: auto-detect URLs, default to SoundCloud search for text queries
+            const isURL = query.startsWith('http://') || query.startsWith('https://');
             
             const searchResult = await player.search(query, {
                 requestedBy: interaction.user,
-                searchEngine: query.startsWith('http') ? 'auto' : 'soundcloudSearch' // Bypasses YT blocks
+                searchEngine: isURL ? QueryType.AUTO : QueryType.SOUNDCLOUD_SEARCH
             });
 
             if (!searchResult || !searchResult.tracks.length) {
-                return interaction.editReply('❌ No results found!');
+                return interaction.editReply('❌ No results found! Try a different search term or a direct SoundCloud/Spotify URL.');
             }
+
+            console.log(`  🎵 [PLAY] Found ${searchResult.tracks.length} tracks, source: ${searchResult.tracks[0]?.extractor?.identifier || 'unknown'}`);
 
             const { track } = await player.play(voiceChannel, searchResult, {
                 nodeOptions: {
@@ -49,7 +59,8 @@ module.exports = {
                     },
                     leaveOnEmpty: true,
                     leaveOnEmptyCooldown: 30000,
-                    leaveOnEnd: false
+                    leaveOnEnd: false,
+                    selfDeaf: true
                 }
             });
 
@@ -60,7 +71,7 @@ module.exports = {
             }, 5000);
 
         } catch (err) {
-            console.error('  ❌ [MUSIC] Play error:', err.message);
+            console.error('  ❌ [MUSIC] Play error:', err.message, err.stack);
             await interaction.editReply(`❌ Could not play: ${err.message}`);
         }
     },

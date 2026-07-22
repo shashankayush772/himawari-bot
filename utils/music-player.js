@@ -1,59 +1,118 @@
-const { Player } = require('discord-player');
-const { DefaultExtractors } = require('@discord-player/extractor');
+const { Player, QueryType } = require('discord-player');
+const {
+    SoundCloudExtractor,
+    SpotifyExtractor,
+    AttachmentExtractor,
+    VimeoExtractor,
+    ReverbnationExtractor,
+    AppleMusicExtractor
+} = require('@discord-player/extractor');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 function setupMusicPlayer(client) {
-    // Force discord-player to use play-dl and ffmpeg-static for maximum reliability
-    process.env.DP_FORCE_YTDL_MOD = "play-dl";
-    process.env.FFMPEG_PATH = require('ffmpeg-static');
+    // Initialize Discord-Player (no ytdlOptions — that was a v6 thing)
+    const player = new Player(client);
 
-    // Initialize Discord-Player
-    const player = new Player(client, {
-        ytdlOptions: {
-            quality: 'highestaudio',
-            highWaterMark: 1 << 25
-        }
-    });
+    // ── Register extractors MANUALLY (DefaultExtractors is broken — returns nulls) ──
+    (async () => {
+        try {
+            await player.extractors.register(SoundCloudExtractor, {});
+            console.log('  ✅ [MUSIC] Registered: SoundCloudExtractor');
+        } catch (e) { console.error('  ❌ [MUSIC] Failed to register SoundCloudExtractor:', e.message); }
 
-    // Load default extractors (YouTube, SoundCloud, Spotify, etc.)
-    player.extractors.loadMulti(DefaultExtractors);
+        try {
+            await player.extractors.register(AttachmentExtractor, {});
+            console.log('  ✅ [MUSIC] Registered: AttachmentExtractor');
+        } catch (e) { console.error('  ❌ [MUSIC] Failed to register AttachmentExtractor:', e.message); }
+
+        try {
+            await player.extractors.register(SpotifyExtractor, {});
+            console.log('  ✅ [MUSIC] Registered: SpotifyExtractor');
+        } catch (e) { console.error('  ❌ [MUSIC] Failed to register SpotifyExtractor:', e.message); }
+
+        try {
+            await player.extractors.register(VimeoExtractor, {});
+            console.log('  ✅ [MUSIC] Registered: VimeoExtractor');
+        } catch (e) { console.error('  ❌ [MUSIC] Failed to register VimeoExtractor:', e.message); }
+
+        try {
+            await player.extractors.register(ReverbnationExtractor, {});
+            console.log('  ✅ [MUSIC] Registered: ReverbnationExtractor');
+        } catch (e) { console.error('  ❌ [MUSIC] Failed to register ReverbnationExtractor:', e.message); }
+
+        try {
+            await player.extractors.register(AppleMusicExtractor, {});
+            console.log('  ✅ [MUSIC] Registered: AppleMusicExtractor');
+        } catch (e) { console.error('  ❌ [MUSIC] Failed to register AppleMusicExtractor:', e.message); }
+
+        console.log(`  ✅ [MUSIC] Total extractors loaded: ${player.extractors.size}`);
+    })();
 
     // Expose player globally on the client
     client.player = player;
 
     // ── Player Events ──
     player.events.on('playerStart', (queue, track) => {
+        console.log(`  🎵 [MUSIC] Now playing: ${track.title} (${track.duration})`);
         const msg = buildNowPlayingMessage(queue, track);
         if (queue.metadata?.channel) {
             queue.metadata.channel.send(msg).catch(() => {});
         }
-        setVoiceStatus(client, queue.connection?.joinConfig?.channelId || queue.channel?.id, `🎵 ${track.title.substring(0, 45) || 'Playing music'}`);
+        try {
+            const channelId = queue.dispatcher?.voiceConnection?.joinConfig?.channelId || queue.channel?.id;
+            if (channelId) setVoiceStatus(client, channelId, `🎵 ${track.title.substring(0, 45) || 'Playing music'}`);
+        } catch (e) {}
     });
 
-    player.events.on('audioError', (queue, error) => {
-        console.error(`  ❌ [MUSIC] Audio Error:`, error.message);
+    player.events.on('audioTrackAdd', (queue, track) => {
+        console.log(`  📋 [MUSIC] Track added to queue: ${track.title}`);
+    });
+
+    player.events.on('playerSkip', (queue, track) => {
+        console.error(`  ⚠️ [MUSIC] SKIPPED (could not extract stream): ${track.title} — URL: ${track.url}`);
+        if (queue.metadata?.channel) {
+            queue.metadata.channel.send({
+                embeds: [new EmbedBuilder()
+                    .setColor(0xED4245)
+                    .setDescription(`⚠️ Skipped **${track.title}** — could not extract audio stream. Try a different song or a direct SoundCloud URL.`)]
+            }).catch(() => {});
+        }
+    });
+
+    player.events.on('playerError', (queue, error, track) => {
+        console.error(`  ❌ [MUSIC] Player error on "${track?.title}":`, error.message);
+        if (queue.metadata?.channel) {
+            queue.metadata.channel.send({
+                embeds: [new EmbedBuilder()
+                    .setColor(0xED4245)
+                    .setDescription(`❌ Error playing **${track?.title || 'unknown'}**: ${error.message}`)]
+            }).catch(() => {});
+        }
     });
 
     player.events.on('error', (queue, error) => {
         console.error(`  ❌ [MUSIC] Queue Error:`, error.message);
     });
 
-    player.on('debug', (message) => {
-        console.log(`  🐛 [MUSIC DEBUG] ${message}`);
-    });
-
-    player.events.on('debug', (queue, message) => {
-        console.log(`  🐛 [QUEUE DEBUG] ${message}`);
-    });
-
     player.events.on('emptyQueue', (queue) => {
+        console.log('  🏁 [MUSIC] Queue empty');
         if (queue.metadata?.channel) {
             const embed = new EmbedBuilder()
                 .setColor(0xED4245)
                 .setDescription('🏁 Queue finished! Add more songs or I\'ll leave soon.');
             queue.metadata.channel.send({ embeds: [embed] }).catch(() => {});
         }
-        setVoiceStatus(client, queue.connection?.joinConfig?.channelId || queue.channel?.id, '');
+        try {
+            const channelId = queue.dispatcher?.voiceConnection?.joinConfig?.channelId || queue.channel?.id;
+            if (channelId) setVoiceStatus(client, channelId, '');
+        } catch (e) {}
+    });
+
+    player.events.on('debug', (queue, message) => {
+        // Only log important debug messages, not every heartbeat
+        if (message.includes('error') || message.includes('Error') || message.includes('skip') || message.includes('idle') || message.includes('buffering')) {
+            console.log(`  🐛 [QUEUE DEBUG] ${message}`);
+        }
     });
 
     // ── Handle Button Interactions ──
