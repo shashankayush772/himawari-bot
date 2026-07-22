@@ -1,99 +1,87 @@
 <div align="center">
+  <img src="https://i.imgur.com/your-banner-url-here.png" alt="Himawari Banner" width="100%" />
   
-# 🌻 Himawari Bot
+  <br />
+  <br />
 
-**A feature-rich, multi-purpose Discord bot built with Discord.js and Shoukaku.**
+  # 🌻 Himawari 
 
-[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg?style=for-the-badge&logo=nodedotjs)](https://nodejs.org/)
-[![Discord.js](https://img.shields.io/badge/Discord.js-v14-blue.svg?style=for-the-badge&logo=discord)](https://discord.js.org/)
-[![Shoukaku](https://img.shields.io/badge/Shoukaku-Lavalink-orange.svg?style=for-the-badge)](https://github.com/Deivu/Shoukaku)
-[![Hosted on Render](https://img.shields.io/badge/Hosted_on-Render-black.svg?style=for-the-badge&logo=render)](https://render.com/)
+  **The all-in-one Discord companion that brings advanced AI, bulletproof security, and engaging community tools to your server.**
 
----
+  [![Add to Server](https://img.shields.io/badge/Add%20Himawari-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](#)
+  [![Support Server](https://img.shields.io/badge/Support-Server-7289DA?style=for-the-badge&logo=discord&logoColor=white)](#)
+  [![Top.gg Vote](https://img.shields.io/badge/Vote%20on-Top.gg-FF3366?style=for-the-badge&logo=topgg&logoColor=white)](#)
+
+  <br />
 </div>
 
-## ✨ Features
+## ✨ Why Himawari?
 
-Himawari comes packed with over **70+ commands** across various categories:
-
-🎵 **Music System**
-* High-quality audio playback using Lavalink & Shoukaku
-* Features: `play`, `pause`, `resume`, `stop`, `skip`, `music-queue`, `nowplaying`, `volume`, `loop`, `shuffle`, `247`
-* External Lavalink node support for zero-OOM hosting
-
-🛡️ **Moderation**
-* Keep your server safe with powerful moderation tools
-* Features: `ban`, `unban`, `unbanall`, `kick`, `clear`, `nuke`, `slowmode`, `roleadd`, `roledel`
-
-🛠️ **Utility & Info**
-* Essential tools for server management and information
-* Features: `serverinfo`, `userinfo`, `channelinfo`, `roleinfo`, `botinfo`, `ping`, `uptime`, `weather`, `translate`, `calculate`, `wikipedia`
-
-🎉 **Fun & Roleplay**
-* Keep your community engaged
-* Features: `8ball`, `coinflip`, `meme`, `hug`, `kiss`, `punch`, `wink`, `facepalm`, `asmr`
+Himawari isn't just another multipurpose bot. She is built to be the **only** bot you need to run, protect, and engage your community. Featuring a lightning-fast modern architecture, Himawari replaces 5+ standard bots with one cohesive, aesthetic experience.
 
 ---
 
-## 🚀 Deployment (Render)
+## 🌟 Key Features
 
-This bot is optimized for deployment on [Render](https://render.com/) using the free tier.
+### 🛡️ Honeypot & Raid Protection (Next-Gen Security)
+Tired of nukers, raiders, and spambots? Himawari features a proprietary **Honeypot Network**. 
+* **Global Threat Intelligence:** If a malicious user raids one Himawari-protected server, they are instantly flagged globally.
+* **Smart Anti-Nuke:** Automatically detects and quarantines malicious admins or hijacked mods trying to destroy your server.
+* **Lockdown & Secure Modes:** Instantly secure your server with a single `/lockdown` or `/secure` command.
 
-### 1. Prerequisites
-* Node.js v20+
-* A Discord Bot Token from the [Discord Developer Portal](https://discord.com/developers/applications)
+### 🤖 Intelligent AI Companion
+Chat naturally with Himawari using state-of-the-art AI integration.
+* Ask questions, generate text, or just have fun casual conversations.
+* Context-aware memory keeps the conversation flowing naturally.
+* Use `/ai` to ask anything or just mention her in chat!
 
-### 2. Environment Variables (`.env`)
-Create a `.env` file in the root directory (or add these to your Render environment settings):
+### 📺 YouTube Live Alerts
+Never miss a stream again!
+* Seamlessly track your favorite YouTubers and VTubers.
+* Lightning-fast notifications the exact minute they go live.
+* Customize your ping roles and alert channels with `/ytnotify`.
 
-```env
-DISCORD_TOKEN=your_bot_token_here
-CLIENT_ID=your_client_id
-GUILD_ID=your_primary_guild_id
+### 🔨 Powerful Moderation
+A complete suite of moderation tools built for massive communities.
+* `Purge`, `Kick`, `Ban`, `Unbanall` with beautiful logging embeds.
+* `Quarantine` system to isolate suspicious users without banning them.
+* Deep server insights with `/serverinfo`, `/channelinfo`, and `/userinfo`.
 
-# Channels
-BUG_REPORT_CHANNEL_ID=channel_id
-SUGGESTION_CHANNEL_ID=channel_id
-LOG_CHANNEL_ID=channel_id
-DM_LOG_CHANNEL_ID=channel_id
-
-# Bot Prefix (Fallback for text commands)
-BOT_PREFIX=!
-
-# Lavalink Configuration (External Nodes)
-LAVALINK_HOST=lavalink.jirayu.net:443
-LAVALINK_PASSWORD=youshallnotpass
-LAVALINK_NAME=Jirayu-Primary
-LAVALINK_SECURE=true
-```
-
-### 3. Running Locally
-```bash
-# Install dependencies
-npm install
-
-# Start the bot
-node start.js
-```
-
-### 4. Deploying to Render
-1. Connect this repository to your Render account.
-2. Create a new **Web Service**.
-3. Render will automatically use the provided `Dockerfile` and `render.yaml`.
-4. Ensure you add all the Environment Variables from the `.env` section to the Render Dashboard.
-5. Deploy!
+### 🎉 Fun, Economy & Roleplay
+Keep your members active and engaged every single day.
+* Express yourself with anime-style roleplay commands (`/hug`, `/kiss`, `/punch`, `/facepalm`).
+* Gamble your luck with `/coinflip` and `/8ball`.
+* Generate hilarious memes instantly with `/meme`.
 
 ---
 
-## 🛠️ Architecture
+## 🛠️ Commands Overview
 
-* **Framework:** [Discord.js v14](https://discord.js.org/)
-* **Music Wrapper:** [Shoukaku](https://github.com/Deivu/Shoukaku)
-* **Audio Server:** External [Lavalink](https://github.com/lavalink-devs/Lavalink) nodes (configured for failover)
-* **Hosting:** Dockerized for Render Web Services
+Himawari packs **60+ flawlessly designed slash commands**. Here are just a few:
+
+| Category | Commands |
+| :--- | :--- |
+| **🛡️ Security** | `/honeypot`, `/lockdown`, `/unlock`, `/secure`, `/quarantine` |
+| **🤖 AI** | `/ai`, `/translate` |
+| **📺 Socials** | `/ytnotify`, `/youtube` |
+| **🔨 Moderation** | `/ban`, `/kick`, `/purge`, `/slowmode`, `/roleadd`, `/roledel` |
+| **ℹ️ Utility** | `/userinfo`, `/serverinfo`, `/calculate`, `/weather`, `/wikipedia` |
+| **🎉 Fun** | `/hug`, `/kiss`, `/meme`, `/8ball`, `/coinflip`, `/wink` |
 
 ---
+
+## 🚀 Get Started Today
+
+Setting up Himawari takes less than 60 seconds.
+
+1. **[Invite Himawari to your server](#)** (Make sure she has Administrator permissions for the Honeypot to work flawlessly).
+2. Move her role to the **highest possible position** in your server settings.
+3. Run `/help` to see all available commands!
 
 <div align="center">
-  <i>Made with 💛 for Discord Communities</i>
+  <br />
+  <img src="https://img.shields.io/badge/Made%20with-Discord.js-yellow?style=flat-square&logo=discord" alt="Discord.js" />
+  <img src="https://img.shields.io/badge/Powered%20by-Render-black?style=flat-square&logo=render" alt="Render" />
+  <br />
+  <i>Made with 💛 for incredible communities</i>
 </div>
