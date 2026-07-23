@@ -8,6 +8,10 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
+        if (interaction.user.id !== '814328153513525308') {
+            return interaction.reply({ content: '❌ You are not the bot owner.', ephemeral: true });
+        }
+
         const url = interaction.options.getString('url');
         await interaction.deferReply({ ephemeral: true });
 

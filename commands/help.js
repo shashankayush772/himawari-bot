@@ -37,10 +37,6 @@ module.exports = {
                     value: '`/help` `/rules` `/bughelp` `/bugreport` `/suggesthelp` `/suggest`'
                 },
                 {
-                    name: '👑 Admin Commands',
-                    value: '`/set-avatar` `/status` `/shutdown` `/reload` `/serverlist`'
-                },
-                {
                     name: '🔗 Other',
                     value: '`/echo` `/echo-advanced` `/say` `/say-embed` `/getinvite` `/pending`'
                 }
