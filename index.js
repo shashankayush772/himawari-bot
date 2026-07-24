@@ -214,7 +214,7 @@ client.on(Events.MessageCreate, async (message) => {
         
         if (!hasAdmin && !inWhitelistChannel && !hasWhitelistRole) {
             // Regex to catch standard links AND discord.gg / discord.com invites even without http://
-            const linkRegex = /(https?:\/\/[^\s]+|discord\.gg\/[^\s]+|discord\.com\/invite\/[^\s]+)/gi;
+            const linkRegex = /(https?:\/\/[^\s]+|discord\.gg\/[^\s]+|discord\.com\/invite\/[^\s]+)/i;
             if (linkRegex.test(message.content)) {
                 // Check if it's a native Discord GIF which should be bypassed
                 const gifRegex = /https:\/\/(tenor\.com\/view|giphy\.com\/gifs|cdn\.discordapp\.com\/attachments|media\.discordapp\.net\/attachments)\/[^\s]+/gi;
