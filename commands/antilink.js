@@ -32,13 +32,13 @@ module.exports = {
 
         if (subCmd === 'toggle') {
             const enabled = interaction.options.getBoolean('enabled');
-            setEnabled(guildId, enabled);
+            await setEnabled(guildId, enabled);
             return interaction.reply({ content: `🛡️ Anti-Link system has been **${enabled ? 'ENABLED' : 'DISABLED'}**.`, ephemeral: true });
         }
 
         if (subCmd === 'whitelist-channel') {
             const channel = interaction.options.getChannel('channel');
-            const added = toggleWhitelistChannel(guildId, channel.id);
+            const added = await toggleWhitelistChannel(guildId, channel.id);
             if (added) {
                 return interaction.reply({ content: `✅ Channel <#${channel.id}> has been **whitelisted**. Links can now be sent there.`, ephemeral: true });
             } else {
@@ -48,7 +48,7 @@ module.exports = {
 
         if (subCmd === 'whitelist-role') {
             const role = interaction.options.getRole('role');
-            const added = toggleWhitelistRole(guildId, role.id);
+            const added = await toggleWhitelistRole(guildId, role.id);
             if (added) {
                 return interaction.reply({ content: `✅ Role <@&${role.id}> has been **whitelisted**. Members with this role can send links anywhere.`, ephemeral: true });
             } else {

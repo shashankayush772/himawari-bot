@@ -217,7 +217,7 @@ client.on(Events.MessageCreate, async (message) => {
             const linkRegex = /(https?:\/\/[^\s]+|discord\.gg\/[^\s]+|discord\.com\/invite\/[^\s]+)/i;
             if (linkRegex.test(message.content)) {
                 // Check if it's a native Discord GIF which should be bypassed
-                const gifRegex = /https?:\/\/(?:[a-zA-Z0-9-]+\.)?(?:tenor\.com|giphy\.com|cdn\.discordapp\.com\/attachments|media\.discordapp\.net\/attachments)\/[^\s]+/gi;
+                const gifRegex = /https?:\/\/(?:[a-zA-Z0-9-]+\.)?(?:tenor\.com|giphy\.com|klipy\.com|cdn\.discordapp\.com\/attachments|media\.discordapp\.net\/attachments)\/[^\s]+/gi;
                 // If it contains a link, and replacing all allowed GIFs still leaves a link, it's bad.
                 const contentWithoutGifs = message.content.replace(gifRegex, '');
                 

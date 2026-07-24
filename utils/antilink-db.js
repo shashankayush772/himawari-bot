@@ -1,79 +1,117 @@
-const fs = require('fs');
-const path = require('path');
+const { MongoClient } = require('mongodb');
+require('dotenv').config();
 
-const dbPath = path.join(__dirname, '..', 'data', 'antilink.json');
+let db;
+let antilinkCollection;
 
-function readDB() {
-    if (!fs.existsSync(dbPath)) return {};
+// Map of GuildID -> Config for quick lookups
+const antilinkCache = new Map();
+
+const defaultConfig = {
+    enabled: false,
+    whitelistedChannels: [],
+    whitelistedRoles: []
+};
+
+async function connectToMongo() {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        console.error('  ⚠️ [ANTI-LINK] MONGODB_URI not set! Configs will not save.');
+        return;
+    }
+
     try {
-        return JSON.parse(fs.readFileSync(dbPath, 'utf8'));
-    } catch {
-        return {};
+        const client = new MongoClient(uri);
+        await client.connect();
+        db = client.db('himawari_bot');
+        antilinkCollection = db.collection('antilink_configs');
+        
+        console.log('  ✅ [ANTI-LINK] Connected to MongoDB');
+
+        // Pre-load all configs into cache
+        const configs = await antilinkCollection.find({}).toArray();
+        for (const config of configs) {
+            antilinkCache.set(config.guildId, config);
+        }
+        console.log(`  ✅ [ANTI-LINK] Cached ${configs.length} configs`);
+    } catch (err) {
+        console.error('  ⚠️ [ANTI-LINK] MongoDB connection failed:', err.message);
     }
 }
 
-function writeDB(data) {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
-}
+// Ensure connection starts
+connectToMongo();
 
 function getConfig(guildId) {
-    const db = readDB();
-    if (!db[guildId]) {
-        db[guildId] = {
-            enabled: false,
-            whitelistedChannels: [],
-            whitelistedRoles: []
-        };
-        writeDB(db);
-    }
-    return db[guildId];
+    return antilinkCache.get(guildId) || { ...defaultConfig };
 }
 
-function setEnabled(guildId, enabled) {
-    const db = readDB();
-    if (!db[guildId]) {
-        db[guildId] = { enabled: false, whitelistedChannels: [], whitelistedRoles: [] };
+async function setEnabled(guildId, enabled) {
+    let config = antilinkCache.get(guildId) || { ...defaultConfig };
+    config.enabled = enabled;
+    antilinkCache.set(guildId, config);
+
+    if (antilinkCollection) {
+        await antilinkCollection.updateOne(
+            { guildId },
+            { $set: { enabled } },
+            { upsert: true }
+        );
     }
-    db[guildId].enabled = enabled;
-    writeDB(db);
-    return db[guildId];
+    return config;
 }
 
-function toggleWhitelistChannel(guildId, channelId) {
-    const db = readDB();
-    if (!db[guildId]) {
-        db[guildId] = { enabled: false, whitelistedChannels: [], whitelistedRoles: [] };
-    }
+async function toggleWhitelistChannel(guildId, channelId) {
+    let config = antilinkCache.get(guildId) || { ...defaultConfig };
     
-    const index = db[guildId].whitelistedChannels.indexOf(channelId);
+    // Ensure arrays exist
+    if (!config.whitelistedChannels) config.whitelistedChannels = [];
+    
+    const index = config.whitelistedChannels.indexOf(channelId);
     let added = false;
     if (index > -1) {
-        db[guildId].whitelistedChannels.splice(index, 1);
+        config.whitelistedChannels.splice(index, 1);
     } else {
-        db[guildId].whitelistedChannels.push(channelId);
+        config.whitelistedChannels.push(channelId);
         added = true;
     }
     
-    writeDB(db);
+    antilinkCache.set(guildId, config);
+
+    if (antilinkCollection) {
+        await antilinkCollection.updateOne(
+            { guildId },
+            { $set: { whitelistedChannels: config.whitelistedChannels } },
+            { upsert: true }
+        );
+    }
     return added;
 }
 
-function toggleWhitelistRole(guildId, roleId) {
-    const db = readDB();
-    if (!db[guildId]) {
-        db[guildId] = { enabled: false, whitelistedChannels: [], whitelistedRoles: [] };
-    }
+async function toggleWhitelistRole(guildId, roleId) {
+    let config = antilinkCache.get(guildId) || { ...defaultConfig };
     
-    const index = db[guildId].whitelistedRoles.indexOf(roleId);
+    // Ensure arrays exist
+    if (!config.whitelistedRoles) config.whitelistedRoles = [];
+    
+    const index = config.whitelistedRoles.indexOf(roleId);
     let added = false;
     if (index > -1) {
-        db[guildId].whitelistedRoles.splice(index, 1);
+        config.whitelistedRoles.splice(index, 1);
     } else {
-        db[guildId].whitelistedRoles.push(roleId);
+        config.whitelistedRoles.push(roleId);
         added = true;
     }
     
-    writeDB(db);
+    antilinkCache.set(guildId, config);
+
+    if (antilinkCollection) {
+        await antilinkCollection.updateOne(
+            { guildId },
+            { $set: { whitelistedRoles: config.whitelistedRoles } },
+            { upsert: true }
+        );
+    }
     return added;
 }
 
