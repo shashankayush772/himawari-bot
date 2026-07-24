@@ -14,7 +14,7 @@ module.exports = {
             .addFields(
                 {
                     name: '🛡️ Security Commands',
-                    value: '`/honeypot` `/lockdown` `/unlock` `/secure` `/quarantine` `/scan` `/antilink`'
+                    value: '`/honeypot` `/lockdown` `/unlock` `/secure` `/quarantine` `/scan`'
                 },
                 {
                     name: '🤖 AI & Social',
