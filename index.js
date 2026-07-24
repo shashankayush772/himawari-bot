@@ -209,8 +209,8 @@ client.on(Events.MessageCreate, async (message) => {
     const antiLinkConfig = getAntiLinkConfig(message.guildId);
     if (antiLinkConfig && antiLinkConfig.enabled) {
         const hasAdmin = message.member?.permissions.has(PermissionFlagsBits.Administrator) || message.member?.permissions.has(PermissionFlagsBits.ManageMessages);
-        const inWhitelistChannel = antiLinkConfig.whitelistedChannels.includes(message.channelId);
-        const hasWhitelistRole = message.member?.roles.cache.some(r => antiLinkConfig.whitelistedRoles.includes(r.id));
+        const inWhitelistChannel = antiLinkConfig.whitelistedChannels?.includes(message.channelId);
+        const hasWhitelistRole = message.member?.roles.cache.some(r => antiLinkConfig.whitelistedRoles?.includes(r.id));
         
         if (!hasAdmin && !inWhitelistChannel && !hasWhitelistRole) {
             // Regex to catch standard links AND discord.gg / discord.com invites even without http://

@@ -59,8 +59,8 @@ module.exports = {
         if (subCmd === 'status') {
             const config = getConfig(guildId);
             
-            const channels = config.whitelistedChannels.length > 0 ? config.whitelistedChannels.map(id => `<#${id}>`).join(' ') : 'None';
-            const roles = config.whitelistedRoles.length > 0 ? config.whitelistedRoles.map(id => `<@&${id}>`).join(' ') : 'None';
+            const channels = config.whitelistedChannels?.length > 0 ? config.whitelistedChannels.map(id => `<#${id}>`).join(' ') : 'None';
+            const roles = config.whitelistedRoles?.length > 0 ? config.whitelistedRoles.map(id => `<@&${id}>`).join(' ') : 'None';
 
             const embed = new EmbedBuilder()
                 .setTitle('🛡️ Anti-Link Status')

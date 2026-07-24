@@ -43,7 +43,8 @@ async function connectToMongo() {
 connectToMongo();
 
 function getConfig(guildId) {
-    return antilinkCache.get(guildId) || { ...defaultConfig };
+    const config = antilinkCache.get(guildId) || {};
+    return { ...defaultConfig, ...config };
 }
 
 async function setEnabled(guildId, enabled) {
