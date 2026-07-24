@@ -16,10 +16,11 @@ fetch('https://discord.com/api/v10/gateway/bot', {
     process.exit(1);
 });
 
-const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } = require('./utils/honeypot-db');
+const { getConfig: getAntiLinkConfig } = require('./utils/antilink-db');
 // Removed static require of ai.js to prevent state desync during hot-reloads
 const fs = require('node:fs');
 const path = require('node:path');
@@ -203,6 +204,36 @@ client.on(Events.MessageCreate, async (message) => {
 
     // Ignore bots, DMs
     if (message.author.bot || !message.guild) return;
+
+    // ── Anti-Link System ──
+    const antiLinkConfig = getAntiLinkConfig(message.guildId);
+    if (antiLinkConfig && antiLinkConfig.enabled) {
+        const hasAdmin = message.member?.permissions.has(PermissionFlagsBits.Administrator) || message.member?.permissions.has(PermissionFlagsBits.ManageMessages);
+        const inWhitelistChannel = antiLinkConfig.whitelistedChannels.includes(message.channelId);
+        const hasWhitelistRole = message.member?.roles.cache.some(r => antiLinkConfig.whitelistedRoles.includes(r.id));
+        
+        if (!hasAdmin && !inWhitelistChannel && !hasWhitelistRole) {
+            // Regex to catch standard links AND discord.gg / discord.com invites even without http://
+            const linkRegex = /(https?:\/\/[^\s]+|discord\.gg\/[^\s]+|discord\.com\/invite\/[^\s]+)/gi;
+            if (linkRegex.test(message.content)) {
+                // Check if it's a native Discord GIF which should be bypassed
+                const gifRegex = /https:\/\/(tenor\.com\/view|giphy\.com\/gifs|cdn\.discordapp\.com\/attachments|media\.discordapp\.net\/attachments)\/[^\s]+/gi;
+                // If it contains a link, and replacing all allowed GIFs still leaves a link, it's bad.
+                const contentWithoutGifs = message.content.replace(gifRegex, '');
+                
+                if (linkRegex.test(contentWithoutGifs)) {
+                    try {
+                        await message.delete();
+                        const warningMsg = await message.channel.send({ content: `❌ ${message.author}, links are not allowed here!` });
+                        setTimeout(() => warningMsg.delete().catch(() => {}), 5000);
+                        return; // Stop processing further
+                    } catch (err) {
+                        console.error('  ⚠️ [ANTI-LINK] Failed to delete message or send warning:', err.message);
+                    }
+                }
+            }
+        }
+    }
 
     const prefix = getPrefix(message.guildId);
 
