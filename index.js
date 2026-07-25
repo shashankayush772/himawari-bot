@@ -20,7 +20,6 @@ const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBu
 const { MessageAdapter } = require('./utils/message-adapter');
 const { startYouTubeLiveMonitor } = require('./utils/yt-live-monitor');
 const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } = require('./utils/honeypot-db');
-const { getConfig: getAntiLinkConfig } = require('./utils/antilink-db');
 // Removed static require of ai.js to prevent state desync during hot-reloads
 const fs = require('node:fs');
 const path = require('node:path');
