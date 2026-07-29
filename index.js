@@ -1,18 +1,6 @@
 require('dotenv').config();
 
-console.log('\n  🔍 [NETWORK TEST] Testing direct connection to Discord API...');
-fetch('https://discord.com/api/v10/gateway/bot', {
-    headers: { 'Authorization': `Bot ${process.env.DISCORD_TOKEN}` }
-}).then(async res => {
-    console.log(`  ✅ [NETWORK TEST] Connected! Status: ${res.status} ${res.statusText}`);
-    if (!res.ok) {
-        console.error(`  ❌ [NETWORK TEST] Discord rejected the connection. Response:`, await res.text());
-        process.exit(1);
-    }
-}).catch(err => {
-    console.error(`  ❌ [NETWORK TEST] Connection completely failed/hung:`, err.message);
-    process.exit(1);
-});
+// Network test removed to let discord.js handle rate limits natively
 
 const { Client, GatewayIntentBits, Collection, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const { MessageAdapter } = require('./utils/message-adapter');
