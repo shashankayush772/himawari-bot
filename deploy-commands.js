@@ -1,6 +1,4 @@
 require('dotenv').config();
-const dns = require('node:dns');
-dns.setDefaultResultOrder('ipv4first'); // Fix IPv6 hanging
 
 console.log('\n  🔍 [NETWORK TEST] Testing direct connection to Discord API from deploy script...');
 fetch('https://discord.com/api/v10/applications/@me', {

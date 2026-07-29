@@ -23,11 +23,11 @@ http.createServer((req, res) => {
 # ── Step 2: Deploy slash commands ──
 echo "  📦 Deploying slash commands..."
 # Run in background with timeout to avoid blocking the bot from starting
-timeout 30 node --dns-result-order=ipv4first deploy-commands.js &
+timeout 30 node deploy-commands.js &
 sleep 2
 
 # ── Step 3: Start the bot ──
 echo ""
 echo "  🤖 Starting Himawari bot..."
 echo ""
-exec node --dns-result-order=ipv4first index.js
+exec node index.js
