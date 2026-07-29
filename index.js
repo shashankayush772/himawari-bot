@@ -22,6 +22,10 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
     ],
     partials: ['Channel'],
+    rest: {
+        timeout: 30_000,  // 30s timeout (default 15s) — Render Singapore has high latency to Discord US-East
+        retries: 5,       // 5 retries (default 3)
+    },
 });
 
 // ── DEBUG LOGGING ──────────────────────────────────────────

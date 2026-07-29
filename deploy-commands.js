@@ -20,7 +20,7 @@ for (const file of commandFiles) {
     }
 }
 
-const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+const rest = new REST({ version: '10', timeout: 30_000, retries: 5 }).setToken(process.env.DISCORD_TOKEN);
 
 // Use --guild flag for instant guild-only sync (testing)
 // Use without flag for global deployment (all servers)
