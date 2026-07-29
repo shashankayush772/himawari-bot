@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dns = require('node:dns');
+dns.setDefaultResultOrder('ipv4first');
 
 // Network test removed
 

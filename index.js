@@ -1,4 +1,6 @@
 require('dotenv').config();
+const dns = require('node:dns');
+dns.setDefaultResultOrder('ipv4first'); // Required on Render Linux — prevents IPv6 DNS hangs
 
 // Network test removed to let discord.js handle rate limits natively
 
