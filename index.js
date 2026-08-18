@@ -62,6 +62,7 @@ for (const file of commandFiles) {
 
 // ── Interaction Handler ────────────────────────────────────
 client.on(Events.InteractionCreate, async (interaction) => {
+    console.log(`[DEBUG] Received interaction: ${interaction.commandName || interaction.customId} from ${interaction.user?.tag}`);
     // ── Honeypot Statistics Popup ──
     if (interaction.isButton() && interaction.customId === 'honeypot_stats_btn') {
         try {
@@ -193,6 +194,7 @@ client.on(Events.MessageCreate, async (message) => {
         }
     }
 
+    console.log(`[DEBUG] Received message from ${message.author.tag}: ${message.content}`);
     // Ignore bots, DMs
     if (message.author.bot || !message.guild) return;
 
