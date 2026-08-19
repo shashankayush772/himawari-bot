@@ -234,8 +234,8 @@ async function getAIResponse(channelId, username, message, userId) {
 }
 
 async function fetchAIResponse(channelId, username, message, userId) {
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) return '⚠️ GEMINI_API_KEY missing in environment variables!';
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return '⚠️ GROQ_API_KEY missing in environment variables!';
 
     // Maintain conversation history
     if (!channelHistory.has(channelId)) {
@@ -267,46 +267,78 @@ async function fetchAIResponse(channelId, username, message, userId) {
 
     try {
         const axios = require('axios');
-        const geminiKey = process.env.GEMINI_API_KEY;
         
-        if (!geminiKey) {
-            console.error(`  ❌ [AI] No GEMINI_API_KEY found in environment variables.`);
+        // Map history to Groq/OpenAI format
+        const groqMessages = [
+            { role: 'system', content: dynamicPrompt }
+        ];
+        
+        for (const msg of history) {
+            groqMessages.push({
+                role: msg.role === 'model' ? 'assistant' : 'user',
+                content: msg.parts[0].text
+            });
+        }
+
+        // Try multiple models in case one is rate limited
+        const modelsToTry = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"];
+        let res = null;
+        let lastError = null;
+
+        for (const modelName of modelsToTry) {
+            try {
+                res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+                    model: modelName,
+                    messages: groqMessages,
+                    max_tokens: 150,
+                    temperature: 0.95
+                }, {
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    validateStatus: () => true
+                });
+
+                if (res.status === 200) break;
+                
+                console.warn(`  ⚠️ [AI] Groq ${modelName} failed (${res.status}): ${JSON.stringify(res.data?.error?.message || res.statusText)}`);
+                
+                if (res.status === 429) continue; // Rate limited, try next model
+                break; // Other error, stop trying
+            } catch (reqErr) {
+                lastError = reqErr;
+                console.warn(`  ⚠️ [AI] Groq ${modelName} request error: ${reqErr.message}`);
+                continue;
+            }
+        }
+
+        if (!res || res.status !== 200) {
+            console.error(`  ❌ [AI] All Groq models failed. Last status: ${res?.status || 'N/A'}`);
             history.pop();
             return null;
         }
 
-        const geminiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
-            system_instruction: { parts: [{ text: dynamicPrompt }] },
-            contents: history,
-            generationConfig: {
-                maxOutputTokens: 150,
-                temperature: 0.95
-            },
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-            ]
-        });
-        
-        let reply = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        let reply = res.data?.choices?.[0]?.message?.content;
+
         if (!reply) {
+            console.error(`  ❌ [AI] Groq returned no text.`);
             history.pop();
             return "*(I tried to reply, but my brain glitched!)* 😵";
         }
-        
+
         reply = reply.trim().replace(/^"|"$/g, '').trim();
+
         history.push({ role: 'model', parts: [{ text: reply }] });
         if (history.length > MAX_HISTORY) {
             let spliceIndex = history.length - MAX_HISTORY;
             if (history[spliceIndex].role === 'model') spliceIndex += 1;
             history.splice(0, spliceIndex);
         }
-        return reply;
 
+        return reply;
     } catch (err) {
-        console.error('  ❌ [AI] Gemini request failed:', err.message);
+        console.error('  ❌ [AI] Groq request failed:', err.message);
         history.pop();
         return null;
     }
