@@ -322,7 +322,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
             }
 
             try {
-                const geminiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+                const geminiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
                     system_instruction: { parts: [{ text: dynamicPrompt }] },
                     contents: history,
                     safetySettings: [
