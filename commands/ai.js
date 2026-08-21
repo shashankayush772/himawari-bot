@@ -234,8 +234,8 @@ async function getAIResponse(channelId, username, message, userId) {
 }
 
 async function fetchAIResponse(channelId, username, message, userId) {
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return '⚠️ GROQ_API_KEY missing in environment variables!';
+    const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY; // fallback if they don't rename it
+    if (!apiKey) return '⚠️ API Key missing in environment variables!';
 
     // Maintain conversation history
     if (!channelHistory.has(channelId)) {
@@ -268,7 +268,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
     try {
         const axios = require('axios');
         
-        // Map history to Groq/OpenAI format
+        // Map Gemini history format to Groq/OpenAI format for the API request
         const groqMessages = [
             { role: 'system', content: dynamicPrompt }
         ];
@@ -280,46 +280,79 @@ async function fetchAIResponse(channelId, username, message, userId) {
             });
         }
 
-        // Try multiple models in case one is rate limited
-        const modelsToTry = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"];
+        // Set the 70B model as primary (excellent Hinglish). If it runs out of tokens, Gemini takes over!
+        const modelsToTry = ["llama-3.3-70b-versatile"];
         let res = null;
-        let lastError = null;
 
         for (const modelName of modelsToTry) {
-            try {
-                res = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-                    model: modelName,
-                    messages: groqMessages,
-                    max_tokens: 150,
-                    temperature: 0.95
-                }, {
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    validateStatus: () => true
-                });
+            res = await axios.post(`https://api.groq.com/openai/v1/chat/completions`, {
+                model: modelName,
+                messages: groqMessages,
+                max_tokens: 150,
+                temperature: 0.95
+            }, {
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                validateStatus: () => true
+            });
 
-                if (res.status === 200) break;
-                
-                console.warn(`  ⚠️ [AI] Groq ${modelName} failed (${res.status}): ${JSON.stringify(res.data?.error?.message || res.statusText)}`);
-                
-                if (res.status === 429) continue; // Rate limited, try next model
-                break; // Other error, stop trying
-            } catch (reqErr) {
-                lastError = reqErr;
-                console.warn(`  ⚠️ [AI] Groq ${modelName} request error: ${reqErr.message}`);
-                continue;
+            // If success, break out of loop
+            if (res.status === 200) break;
+            
+            // If Rate Limited (429), log it and let the loop try the next model
+            if (res.status === 429) {
+                console.warn(`  ⚠️ [AI] Groq rate limit hit for ${modelName}. Falling back to next model...`);
+                continue; 
             }
+
+            // If some other error, break out
+            break;
         }
 
         if (!res || res.status !== 200) {
-            console.error(`  ❌ [AI] All Groq models failed. Last status: ${res?.status || 'N/A'}`);
-            history.pop();
-            return null;
+            console.warn(`  ⚠️ [AI] All Groq models exhausted or failed! Falling back to Gemini 2.5 Flash as ultimate backup...`);
+            const geminiKey = process.env.GEMINI_API_KEY;
+            
+            if (!geminiKey) {
+                console.error(`  ❌ [AI] Groq failed and no Gemini API key found for backup.`);
+                history.pop();
+                return null;
+            }
+
+            try {
+                const geminiRes = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+                    system_instruction: { parts: [{ text: dynamicPrompt }] },
+                    contents: history,
+                    safetySettings: [
+                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                    ]
+                });
+                
+                let geminiReply = geminiRes.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!geminiReply) {
+                    history.pop();
+                    return "*(I tried to reply, but my brain glitched!)* 😵";
+                }
+                
+                geminiReply = geminiReply.trim().replace(/^"|"$/g, '').trim();
+                history.push({ role: 'model', parts: [{ text: geminiReply }] });
+                if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
+                return geminiReply;
+
+            } catch (geminiErr) {
+                console.error(`  ❌ [AI] Gemini Backup failed:`, geminiErr.message);
+                history.pop();
+                return null;
+            }
         }
 
-        let reply = res.data?.choices?.[0]?.message?.content;
+        const data = res.data;
+        let reply = data?.choices?.[0]?.message?.content;
 
         if (!reply) {
             console.error(`  ❌ [AI] Groq returned no text.`);
@@ -327,8 +360,10 @@ async function fetchAIResponse(channelId, username, message, userId) {
             return "*(I tried to reply, but my brain glitched!)* 😵";
         }
 
+        // Clean up: Remove leading/trailing quotes if the model wrapped its response in them
         reply = reply.trim().replace(/^"|"$/g, '').trim();
 
+        // Add bot reply to history for context
         history.push({ role: 'model', parts: [{ text: reply }] });
         if (history.length > MAX_HISTORY) {
             let spliceIndex = history.length - MAX_HISTORY;
@@ -339,7 +374,7 @@ async function fetchAIResponse(channelId, username, message, userId) {
         return reply;
     } catch (err) {
         console.error('  ❌ [AI] Groq request failed:', err.message);
-        history.pop();
+        history.pop(); // Remove user message on failure
         return null;
     }
 }
