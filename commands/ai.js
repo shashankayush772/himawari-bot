@@ -279,8 +279,8 @@ async function fetchAIResponse(channelId, username, message, userId) {
             });
         }
 
-        // Try multiple models - if one is down or rate limited, try the next
-        const modelsToTry = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "gemma2-9b-it"];
+        // Updated Aug 2026: old llama/gemma models were deprecated. Using new active models.
+        const modelsToTry = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
         let res = null;
 
         for (const modelName of modelsToTry) {
