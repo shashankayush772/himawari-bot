@@ -301,6 +301,9 @@ async function fetchAIResponse(channelId, username, message, userId) {
             // If success, break out of loop
             if (res.status === 200) break;
             
+            // Log the FULL error from Groq so we can debug
+            console.error(`  ❌ [AI] Groq ${modelName} returned status ${res.status}:`, JSON.stringify(res.data));
+
             // If Rate Limited (429), log it and let the loop try the next model
             if (res.status === 429) {
                 console.warn(`  ⚠️ [AI] Groq rate limit hit for ${modelName}. Falling back to next model...`);
