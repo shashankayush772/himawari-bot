@@ -12,6 +12,14 @@ const { getHoneypotChannel, incrementStats, getStats, updateGlobalServerCount } 
 const fs = require('node:fs');
 const path = require('node:path');
 
+// ── Render Web Service Keep-Alive ──────────────────────────
+// Render requires web services to bind to $PORT. If it doesn't, Render kills it.
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 10000;
+app.get('/', (req, res) => res.send('Bot is running!'));
+app.listen(port, () => console.log(`  🌐 Web server listening on port ${port} (Render Keep-Alive)`));
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
