@@ -266,6 +266,8 @@ async function pollYouTubeLive(client) {
                         await sendLiveNotification(client, track.discordChannelId, entry, track.mentionRole, guildConfig.customMessage);
                         data.notified.push(notifKey);
                         changed = true;
+                        // SAVE IMMEDIATELY to prevent duplicate spam if bot crashes!
+                        await saveDataAsync(data);
                     } else if (isUpcoming) {
                         // Scheduled but not live yet — store as pending
                         if (!data.pendingLives[notifKey]) {
@@ -310,6 +312,7 @@ async function pollYouTubeLive(client) {
                 data.notified.push(notifKey);
                 delete data.pendingLives[notifKey];
                 changed = true;
+                await saveDataAsync(data); // SAVE IMMEDIATELY!
             }
             await new Promise(r => setTimeout(r, 1500));
         } catch {}
