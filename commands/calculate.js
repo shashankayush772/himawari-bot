@@ -31,7 +31,7 @@ module.exports = {
                 { name: '📥 Expression', value: `\`\`\`${expression}\`\`\`` },
                 { name: '📤 Result', value: `\`\`\`${result}\`\`\`` }
             )
-            .setFooter({ text: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamic: true }) })
+            .setFooter({ text: interaction.guild?.name || 'Himawari Bot', iconURL: interaction.guild?.iconURL({ dynamic: true }) || undefined })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });

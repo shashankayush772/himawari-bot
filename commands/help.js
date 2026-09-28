@@ -41,7 +41,7 @@ module.exports = {
                     value: '`/echo` `/echo-advanced` `/say` `/say-embed` `/getinvite` `/pending`'
                 }
             )
-            .setFooter({ text: interaction.guild.name })
+            .setFooter({ text: interaction.guild?.name || 'Himawari Bot' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });

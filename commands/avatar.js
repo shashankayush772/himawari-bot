@@ -15,7 +15,7 @@ module.exports = {
             .setTitle(`${user.username}'s Avatar`)
             .setColor(0xFFEFD5)
             .setImage(user.displayAvatarURL({ dynamic: true, size: 4096 }))
-            .setFooter({ text: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamic: true }) })
+            .setFooter({ text: interaction.guild?.name || 'Himawari Bot', iconURL: interaction.guild?.iconURL({ dynamic: true }) || undefined })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });

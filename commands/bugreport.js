@@ -15,7 +15,7 @@ module.exports = {
             .setColor(0xED4245)
             .addFields(
                 { name: '👤 Author', value: interaction.user.toString(), inline: true },
-                { name: '🏠 Server', value: interaction.guild.name, inline: true },
+                { name: '🏠 Server', value: interaction.guild?.name || 'DM', inline: true },
                 { name: '📝 Report', value: report }
             )
             .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))

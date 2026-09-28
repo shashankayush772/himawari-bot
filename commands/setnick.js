@@ -58,7 +58,7 @@ module.exports = {
                     { name: '👤 User', value: `${member}`, inline: true },
                     { name: '📌 Sticky Nick', value: nick, inline: true }
                 )
-                .setAuthor({ name: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamic: true }) })
+                .setAuthor({ name: interaction.guild?.name || 'Server', iconURL: interaction.guild?.iconURL({ dynamic: true }) || undefined })
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed] });

@@ -10,7 +10,7 @@ module.exports = {
             .setColor(Math.floor(Math.random() * 0xFFFFFF))
             .setTitle('🐛 How to Report a Bug')
             .setDescription('Use the `/bugreport` command to report a bug directly to the developer!\n\n**Example:**\n`/bugreport report:The kick command is not working`')
-            .setFooter({ text: interaction.guild.name })
+            .setFooter({ text: interaction.guild?.name || 'Himawari Bot' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
