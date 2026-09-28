@@ -330,8 +330,8 @@ async function startYouTubeLiveMonitor(client) {
     // Initial poll after 30 seconds (let bot finish starting)
     setTimeout(() => pollYouTubeLive(client), 30_000);
 
-    // Then poll every 5 minutes (300,000 ms) to save API quota
-    setInterval(() => pollYouTubeLive(client), 300_000);
+    // Poll every 2 minutes (120,000 ms)
+    setInterval(() => pollYouTubeLive(client), 120_000);
 }
 
 module.exports = { loadData, saveData, loadDataAsync, saveDataAsync, resolveChannelId, startYouTubeLiveMonitor };
