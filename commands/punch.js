@@ -1,30 +1,46 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
-const gifs = [
-    'https://media1.tenor.com/images/ee3f2a6939a68df9563a7374f131fd96/tenor.gif?itemid=14210784',
-    'https://media.tenor.com/images/8e51636630e8eed819dd59f92c928795/tenor.gif',
-    'https://media.tenor.com/images/1dcba5faac6462fa788487c99cd678c9/tenor.gif',
-    'https://media.tenor.com/images/2dfb030da07fe89448bb636c5e969ece/tenor.gif',
+const messages = [
+    '{user} punches {target} right in the face! 👊💥',
+    'WHAM! {user} lands a punch on {target}! 💢',
+    '{user} gives {target} a playful punch! Ouch~ 😤',
+    'POW! {user} just punched {target}! That\'s gotta hurt! 🥊',
+    '{user} goes full anime mode and punches {target}! 💫',
+    '{user} unleashes their fury on {target}! Take that! 👊🔥',
+    'K.O.! {user} knocked out {target} with one punch! 💀',
+    '{user} couldn\'t hold back and punched {target}! 😡💢',
 ];
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('punch')
-        .setDescription('👊 Punch someone (playfully)!')
+        .setDescription('👊 Punch someone with a cute anime GIF!')
         .addUserOption(opt =>
             opt.setName('user').setDescription('The person to punch').setRequired(true)
         ),
 
     async execute(interaction) {
         const user = interaction.options.getUser('user');
-        const gif = gifs[Math.floor(Math.random() * gifs.length)];
+        const msg = messages[Math.floor(Math.random() * messages.length)]
+            .replace('{user}', `**${interaction.user.username}**`)
+            .replace('{target}', `**${user.username}**`);
 
-        const embed = new EmbedBuilder()
-            .setColor(Math.floor(Math.random() * 0xFFFFFF))
-            .setDescription(`**${interaction.user.username}** punched **${user.username}**! 👊`)
-            .setImage(gif)
-            .setTimestamp();
+        try {
+            const res = await fetch('https://nekos.best/api/v2/punch');
+            const data = await res.json();
+            const gifUrl = data.results[0].url;
+            const animeName = data.results[0].anime_name;
 
-        await interaction.reply({ embeds: [embed] });
+            const embed = new EmbedBuilder()
+                .setDescription(msg)
+                .setImage(gifUrl)
+                .setColor(0xE74C3C)
+                .setFooter({ text: `Anime: ${animeName}` })
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed] });
+        } catch {
+            await interaction.reply({ content: '❌ Could not fetch a punch GIF. Try again later!', ephemeral: true });
+        }
     },
 };
