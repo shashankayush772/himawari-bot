@@ -60,6 +60,7 @@ module.exports = {
             .setTitle(`${serverName} – OFFICIAL SERVER RULES`)
             .setDescription(rulesText)
             .setColor(0x2B2D31)
+            .setThumbnail(interaction.guild?.iconURL({ dynamic: true, size: 512 }) || null)
             .setImage('https://static.klipy.com/ii/d7aec6f6f171607374b2065c836f92f4/aa/7d/IBdUU0I9CoqNKDlJin.gif')
             .setTimestamp();
 
