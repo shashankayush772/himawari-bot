@@ -56,9 +56,6 @@ module.exports = {
             `🔥 Enjoy your stay in **${serverName}** — Stay Powerful. Stay Respectful.`,
         ].join('\n');
 
-        const { AttachmentBuilder } = require('discord.js');
-        const attachment = new AttachmentBuilder('./assets/rules-banner.mp4', { name: 'rules-banner.mp4' });
-
         const embed = new EmbedBuilder()
             .setTitle(`${serverName} – OFFICIAL SERVER RULES`)
             .setDescription(rulesText)
@@ -66,6 +63,9 @@ module.exports = {
             .setThumbnail(interaction.guild?.iconURL({ dynamic: true, size: 512 }) || null)
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], files: [attachment] });
+        // Send as a separate message to the channel
+        await interaction.channel.send({ embeds: [embed] });
+        // Reply ephemerally to hide the command execution
+        await interaction.reply({ content: '✅ Rules posted successfully.', ephemeral: true });
     },
 };
