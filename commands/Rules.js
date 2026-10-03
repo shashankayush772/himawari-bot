@@ -1,34 +1,66 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('rules')
-        .setDescription('📜 Display the server rules'),
+        .setDescription('📜 Display the official server rules')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        const serverName = interaction.guild?.name || 'this server';
+
+        const rulesText = [
+            `Welcome to **${serverName}**. By staying here, you agree to follow all rules below.`,
+            `━━━━━━━━━━━━━━━━━━━━━━`,
+            `📋 **Official Policies**`,
+            `[Discord Terms of Service](https://discord.com/terms)`,
+            `[Discord Community Guidelines](https://discord.com/guidelines)`,
+            `━━━━━━━━━━━━━━━━━━━━━━`,
+            ``,
+            `🤝 **Respect Is Mandatory**`,
+            `• Respect all members and staff`,
+            `• No harassment, hate speech, or toxicity`,
+            `• No personal attacks`,
+            ``,
+            `👮 **Respect Staff**`,
+            `• Follow mod/admin instructions`,
+            `• Do not argue about warnings publicly`,
+            `• Contact staff privately for issues`,
+            ``,
+            `🚫 **No Spam / No Ads**`,
+            `• No spam, flooding, or excessive mentions`,
+            `• No self-promo or server invites`,
+            `• No NSFW content`,
+            ``,
+            `🛡️ **No Scams / No ALT Accounts**`,
+            `• Scamming = instant ban`,
+            `• 2nd ID (ALT) not allowed`,
+            `• Both accounts will be banned if caught`,
+            ``,
+            `🎤 **Voice & Chat Rules**`,
+            `• No voice changers for trolling`,
+            `• No mic spam or soundboard abuse`,
+            `• No abusing members`,
+            ``,
+            `🌐 **Language Rule**`,
+            `• Only Hindi & English allowed`,
+            ``,
+            `━━━━━━━━━━━━━━━━━━━━━━`,
+            ``,
+            `⚠️ **Punishments**`,
+            ``,
+            `Warning → Mute → Kick → Timeout → Permanent Ban`,
+            ``,
+            `Staff decisions are final.`,
+            ``,
+            `🔥 Enjoy your stay in **${serverName}** — Stay Powerful. Stay Respectful.`,
+        ].join('\n');
+
         const embed = new EmbedBuilder()
-            .setColor(0x00FFEB)
-            .setTitle('📜 RULES')
-            .setDescription(
-                '**General Rules**\n\n' +
-                'I. Keep communication in English as much as possible.\n' +
-                'II. No hate, toxic behavior, sexism, or racism.\n' +
-                'III. Don\'t spam, spoil, flood chat with CAPS, or line-split.\n' +
-                'IV. Starting or participating in drama is forbidden.\n' +
-                'V. Disrespecting members or servers is not allowed.\n' +
-                'VI. Rule evasion or testing limits is not allowed.\n' +
-                'VII. Don\'t promote cruelty, violence, self-harm, or pornography.\n' +
-                'VIII. No begging, stalking, or threatening.\n' +
-                'IX. Raiding or planning raids is forbidden.\n' +
-                'X. Keep things SFW in all channels.\n' +
-                'XI. No advertising. DM advertising is strictly forbidden.\n\n' +
-                '**Voice Chat Rules**\n\n' +
-                'I. No ear-rape or unwanted soundboards/voice changers.\n' +
-                'II. No voice chat surfing.\n' +
-                'III. Use push-to-talk if you have background noise.\n' +
-                'IV. Give others a chance to use music bots.\n' +
-                'V. Respect private channel limits.'
-            )
+            .setTitle(`${serverName} – OFFICIAL SERVER RULES`)
+            .setDescription(rulesText)
+            .setColor(0x2B2D31)
+            .setImage('https://static.klipy.com/ii/d7aec6f6f171607374b2065c836f92f4/aa/7d/IBdUU0I9CoqNKDlJin.gif')
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
