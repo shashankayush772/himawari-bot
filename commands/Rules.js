@@ -7,6 +7,9 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        // Defer instantly so the interaction doesn't expire if sending takes >3 seconds
+        await interaction.deferReply({ ephemeral: true });
+
         const serverName = interaction.guild?.name || 'this server';
 
         const rulesText = [
@@ -66,13 +69,12 @@ module.exports = {
         try {
             // Send as a separate message to the channel
             await interaction.channel.send({ embeds: [embed] });
-            // Reply ephemerally to hide the command execution
-            await interaction.reply({ content: '✅ Rules posted successfully.', ephemeral: true });
+            // Edit the ephemeral reply to hide the command execution
+            await interaction.editReply({ content: '✅ Rules posted successfully.' });
         } catch (error) {
             console.error('Rules command error:', error);
-            await interaction.reply({ 
-                content: `❌ Error posting rules to this channel: \`${error.message}\`\nPlease check my permissions!`, 
-                ephemeral: true 
+            await interaction.editReply({ 
+                content: `❌ Error posting rules to this channel: \`${error.message}\`\nPlease check my permissions!`
             });
         }
     },
