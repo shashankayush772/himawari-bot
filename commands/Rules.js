@@ -63,9 +63,17 @@ module.exports = {
             .setThumbnail(interaction.guild?.iconURL({ dynamic: true, size: 512 }) || null)
             .setTimestamp();
 
-        // Send as a separate message to the channel
-        await interaction.channel.send({ embeds: [embed] });
-        // Reply ephemerally to hide the command execution
-        await interaction.reply({ content: '✅ Rules posted successfully.', ephemeral: true });
+        try {
+            // Send as a separate message to the channel
+            await interaction.channel.send({ embeds: [embed] });
+            // Reply ephemerally to hide the command execution
+            await interaction.reply({ content: '✅ Rules posted successfully.', ephemeral: true });
+        } catch (error) {
+            console.error('Rules command error:', error);
+            await interaction.reply({ 
+                content: `❌ Error posting rules to this channel: \`${error.message}\`\nPlease check my permissions!`, 
+                ephemeral: true 
+            });
+        }
     },
 };
