@@ -56,14 +56,17 @@ module.exports = {
             `🔥 Enjoy your stay in **${serverName}** — Stay Powerful. Stay Respectful.`,
         ].join('\n');
 
+        const { AttachmentBuilder } = require('discord.js');
+        const attachment = new AttachmentBuilder('./assets/rules-banner.gif', { name: 'rules-banner.gif' });
+
         const embed = new EmbedBuilder()
             .setTitle(`${serverName} – OFFICIAL SERVER RULES`)
             .setDescription(rulesText)
             .setColor(0x2B2D31)
             .setThumbnail(interaction.guild?.iconURL({ dynamic: true, size: 512 }) || null)
-            .setImage('https://static.klipy.com/ii/d7aec6f6f171607374b2065c836f92f4/aa/7d/IBdUU0I9CoqNKDlJin.gif')
+            .setImage('attachment://rules-banner.gif')
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed], files: [attachment] });
     },
 };
