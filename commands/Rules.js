@@ -57,14 +57,13 @@ module.exports = {
         ].join('\n');
 
         const { AttachmentBuilder } = require('discord.js');
-        const attachment = new AttachmentBuilder('./assets/rules-banner.gif', { name: 'rules-banner.gif' });
+        const attachment = new AttachmentBuilder('./assets/rules-banner.mp4', { name: 'rules-banner.mp4' });
 
         const embed = new EmbedBuilder()
             .setTitle(`${serverName} – OFFICIAL SERVER RULES`)
             .setDescription(rulesText)
             .setColor(0x2B2D31)
             .setThumbnail(interaction.guild?.iconURL({ dynamic: true, size: 512 }) || null)
-            .setImage('attachment://rules-banner.gif')
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed], files: [attachment] });
