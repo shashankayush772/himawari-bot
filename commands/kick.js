@@ -10,7 +10,7 @@ module.exports = {
 
     async execute(interaction) {
         const member = interaction.options.getMember('user');
-        const reason = interaction.options.getString('reason');
+        const reason = interaction.options.getString('reason') || 'No reason specified';
 
         if (!member) return interaction.reply({ content: '❌ User not found in this server.', ephemeral: true });
         if (!member.kickable) return interaction.reply({ content: '❌ I cannot kick this member.', ephemeral: true });
