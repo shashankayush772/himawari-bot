@@ -29,8 +29,12 @@ module.exports = {
                     value: '`/ping` `/botinfo` `/invite` `/uptime` `/avatar` `/userinfo` `/serverinfo` `/channelinfo` `/roleinfo` `/members` `/screenshot` `/wikipedia` `/weather`'
                 },
                 {
-                    name: '🎱 Fun & Roleplay',
-                    value: '`/8ball` `/coinflip` `/hug` `/kiss` `/wink` `/punch` `/facepalm` `/meme` `/enlarge` `/steal`'
+                    name: '🎱 Fun & Games',
+                    value: '`/8ball` `/coinflip` `/meme` `/enlarge` `/steal` `/facepalm`'
+                },
+                {
+                    name: '🎭 Anime & Roleplay',
+                    value: '`/hug` `/kiss` `/wink` `/punch` `/pat` `/cuddle` `/poke` `/bite` `/handhold` `/highfive` `/wave` `/baka` `/cry` `/blush` `/smile` `/happy` `/laugh` `/think` `/yeet` `/slap` `/shoot` `/stare`'
                 },
                 {
                     name: '📋 Community',
